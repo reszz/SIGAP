@@ -30,10 +30,11 @@ test('login screen includes team invitation context', function () {
     $response = $this->get(route('login', ['invitation' => $invitation->code]));
 
     $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('auth/login')
-        ->where('teamInvitation.code', $invitation->code)
-        ->where('teamInvitation.teamName', 'Laravel Team'),
+    $response->assertInertia(
+        fn (Assert $page) => $page
+            ->component('auth/login')
+            ->where('teamInvitation.code', $invitation->code)
+            ->where('teamInvitation.teamName', 'Laravel Team'),
     );
 });
 
@@ -41,12 +42,24 @@ test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'login' => $user->email,
         'password' => 'password',
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('dashboard', ['current_team' => $user->personalTeam()->slug]));
+});
+
+test('users can authenticate with their NIM', function () {
+    $user = User::factory()->create(['nim' => '20260001']);
+
+    $response = $this->post(route('login.store'), [
+        'login' => '20260001',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticatedAs($user);
+    $response->assertRedirect(route('dashboard', ['current_team' => $user->personalTeam()->slug]));
 });
 
 test('passkey login response redirects to the current team dashboard', function () {
@@ -89,7 +102,7 @@ test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
     $this->post(route('login.store'), [
-        'email' => $user->email,
+        'login' => $user->email,
         'password' => 'wrong-password',
     ]);
 
@@ -111,7 +124,7 @@ test('users are rate limited', function () {
     RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'login' => $user->email,
         'password' => 'wrong-password',
     ]);
 

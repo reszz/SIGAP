@@ -1,0 +1,283 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Tambah `HasFactory` trait ke model `DivisiPanitia`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618204814
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618214038
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619766974
+      }
+    ],
+    "2.1 Buat file `app/Http/Controllers/DivisiPanitiaController.php`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618204869
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618214852
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619774961
+      }
+    ],
+    "2.2 Tambahkan metode `destroy(Request $request, string $currentTeam, DivisiPanitia $divisi): RedirectResponse`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618204918
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619784043
+      }
+    ],
+    "3. Daftarkan routes di `routes/web.php`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618204966
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619791831
+      }
+    ],
+    "4. Checkpoint — Pastikan routing dan controller terdaftar benar": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205009
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619802524
+      }
+    ],
+    "5. Perbarui `KegiatanController::detail()` untuk kirim prop `canManage`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205054
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619813968
+      }
+    ],
+    "6.1 Tambahkan prop `canManage: boolean` ke tipe `Props`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205124
+      },
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619821451
+      }
+    ],
+    "6.2 Tambahkan form inline tambah Divisi (tampil hanya jika `canManage === true`)": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205201
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620262077
+      }
+    ],
+    "6.3 Tambahkan tombol hapus Divisi di tiap baris (tampil hanya jika `canManage === true`)": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205242
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620272820
+      }
+    ],
+    "7.1 Buat `database/factories/DivisiPanitiaFactory.php`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205285
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620281574
+      }
+    ],
+    "7.2 Buat `database/factories/TugasPanitiaFactory.php`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205329
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620290013
+      }
+    ],
+    "8.1 TC-1: Pengurus berhasil tambah Divisi ke Kegiatan milik Team-nya": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205376
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620305214
+      }
+    ],
+    "8.2 TC-2: Member tidak bisa tambah Divisi (403 dari middleware)": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205427
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620321572
+      }
+    ],
+    "8.3 TC-3: Pengurus tidak bisa tambah Divisi ke Kegiatan Team lain (403 dari controller)": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205484
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620329745
+      }
+    ],
+    "8.4 TC-4: Validasi `nama_divisi` kosong": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205580
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620338526
+      }
+    ],
+    "8.5 TC-5: Validasi `nama_divisi` > 100 karakter": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205625
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620349614
+      }
+    ],
+    "8.6 TC-6: Pengurus berhasil hapus Divisi milik Team-nya": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205672
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620358452
+      }
+    ],
+    "8.7 TC-7: Pengurus tidak bisa hapus Divisi dari Team lain (403)": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205715
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620366386
+      }
+    ],
+    "8.8 TC-8: Hapus Divisi cascade-hapus TugasPanitia": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205757
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620375060
+      }
+    ],
+    "9. Checkpoint final — Jalankan semua tests": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786618205821
+      },
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620383189
+      }
+    ],
+    "2. Buat `DivisiPanitiaController`": [
+      {
+        "executionId": "5ee125e5-bf9c-4254-badb-d03969dd72cb",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786619784091
+      }
+    ],
+    "6. Perbarui `resources/js/pages/kegiatan/show.tsx`": [
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620272875
+      }
+    ],
+    "7. Buat factories untuk test": [
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620290074
+      }
+    ],
+    "8. Tulis feature tests di `tests/Feature/DivisiPanitiaTest.php`": [
+      {
+        "executionId": "1957c52d-88dc-4d0c-be28-0a410b3acf09",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786620375113
+      }
+    ]
+  }
+}

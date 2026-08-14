@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -34,12 +36,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['name', 'email', 'password', 'current_team_id'])]
+#[Fillable(['name', 'nim', 'email', 'password', 'role', 'current_team_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -53,5 +55,49 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function isPengurus(): bool
+    {
+        return $this->role === 'pengurus';
+    }
+
+    public function isAnggota(): bool
+    {
+        return $this->role === 'anggota';
+    }
+
+    public function tugasPanitia(): HasMany
+    {
+        return $this->hasMany(TugasPanitia::class);
+    }
+
+    public function rsvp(): HasMany
+    {
+        return $this->hasMany(Rsvp::class);
+    }
+
+    public function presensi(): HasMany
+    {
+        return $this->hasMany(Presensi::class);
+    }
+
+    public function evaluasi(): HasMany
+    {
+        return $this->hasMany(Evaluasi::class);
+    }
+
+    public function dokumentasi(): HasMany
+    {
+        return $this->hasMany(Dokumentasi::class, 'uploaded_by');
+    }
+
+    protected static function booted(): void
+    {
+        // Saat user di-soft-delete, hapus semua tugas panitia yang di-assign ke user ini
+        // agar tidak ada orphan data dan detail kegiatan tetap bisa dirender
+        static::deleting(function (User $user) {
+            $user->tugasPanitia()->delete();
+        });
     }
 }

@@ -1,0 +1,253 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Update model `Kegiatan`: tambah relasi dan `$fillable`": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654520
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598685819
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786599714339
+      }
+    ],
+    "2.1 Daftarkan route `riwayat-saya.index` di `routes/web.php`": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654574
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786599731247
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786599957680
+      }
+    ],
+    "2.2 Buat `RiwayatSayaController` dengan tiga query eager-loaded": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654631
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786599990198
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600238218
+      }
+    ],
+    "3.1 Buat halaman `resources/js/pages/riwayat-saya/index.tsx` — scaffold dan types": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654726
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600245267
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601059175
+      }
+    ],
+    "3.2 Implementasikan helper functions dan komponen shared di halaman yang sama": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654786
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600246370
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601065805
+      }
+    ],
+    "3.3 Implementasikan section Riwayat RSVP": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654832
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600247274
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601072410
+      }
+    ],
+    "3.4 Implementasikan section Riwayat Presensi": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654877
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600248169
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601078676
+      }
+    ],
+    "3.5 Implementasikan section Riwayat Evaluasi": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654920
+      },
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600248480
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601092041
+      }
+    ],
+    "4. Checkpoint — Pastikan aplikasi dapat dijalankan": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598654962
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601109487
+      }
+    ],
+    "5.1 Test access control: guest, semua team role, dan user bukan anggota team": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598655006
+      },
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601119289
+      },
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604024628
+      }
+    ],
+    "5.2 Test isolasi data user dan scoping team": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598655051
+      },
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604042998
+      }
+    ],
+    "5.3 Test ordering dan limit": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598655094
+      },
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604050824
+      }
+    ],
+    "5.4 Test empty state dan Inertia props shape": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598655134
+      },
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604062758
+      }
+    ],
+    "6. Final Checkpoint — Pastikan semua tests pass": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786598655178
+      },
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604088853
+      }
+    ],
+    "1. Migration: tambah kolom `team_id` ke tabel `kegiatan`": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786599714390
+      }
+    ],
+    "2. Route dan Controller": [
+      {
+        "executionId": "4b790f63-c913-4d5c-bcea-c68e552be71e",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786600238291
+      }
+    ],
+    "3. React Page": [
+      {
+        "executionId": "756c6543-a1ee-48bc-a6bd-fc155c9f1c1f",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786601092096
+      }
+    ],
+    "5. Feature Tests (Pest)": [
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604062808
+      }
+    ],
+    "1.2 Tambahkan kolom `team_id` ke `KegiatanFactory` jika ada, agar factory-based tests tidak gagal": [
+      {
+        "executionId": "de30051d-656d-4f96-9344-f0d0dd6cdbe1",
+        "chatSessionId": "sess_ddcae773-c2ea-492a-aa77-8eec494ab69e",
+        "timestamp": 1786604132303
+      }
+    ]
+  }
+}

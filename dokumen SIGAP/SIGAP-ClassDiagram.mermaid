@@ -1,0 +1,145 @@
+%% SIGAP - Class Diagram
+%% Representasi OOP dari model data pada SIGAP-ERD.mermaid / SIGAP-DataDictionary.md
+
+classDiagram
+    class User {
+        +int id
+        +string name
+        +string nim
+        +string email
+        -string password
+        +string role
+        +login()
+        +logout()
+        +lihatRiwayatPribadi() Riwayat
+    }
+
+    class Kegiatan {
+        +int id
+        +string nama
+        +string deskripsi
+        +TipeKegiatan tipe
+        +int kuota
+        +string warna
+        +tambahSesi(Sesi) void
+        +hitungSisaKuota() int
+        +assignWarnaOtomatis() void
+    }
+
+    class Sesi {
+        +int id
+        +date tanggal
+        +time waktuMulai
+        +time waktuSelesai
+        +string lokasi
+        +string kodePresensi
+        +generateKodePresensi() void
+        +getStatus() StatusSesi
+    }
+
+    class Rundown {
+        +int id
+        +time waktu
+        +string uraianAcara
+        +int urutan
+    }
+
+    class DivisiPanitia {
+        +int id
+        +string namaDivisi
+        +tambahTugas(TugasPanitia) void
+    }
+
+    class TugasPanitia {
+        +int id
+        +string deskripsiTugas
+        +StatusTugas status
+        +updateStatus(StatusTugas) void
+    }
+
+    class Rsvp {
+        +int id
+        +StatusRsvp status
+        +datetime waktuDaftar
+        +daftar() void
+        +batalkan() void
+    }
+
+    class Presensi {
+        +int id
+        +string catatan
+        +datetime waktuIsi
+        +validasiRsvp() bool
+        +cegahDuplikat() bool
+        +simpan() void
+    }
+
+    class Anggaran {
+        +int id
+        +JenisAnggaran jenis
+        +string sumberKategori
+        +decimal estimasi
+        +decimal realisasi
+        +hitungSelisih() decimal
+    }
+
+    class Dokumentasi {
+        +int id
+        +TipeDokumentasi tipe
+        +string filePath
+        +unggah() void
+    }
+
+    class Evaluasi {
+        +int id
+        +int rating
+        +string komentar
+        +submit() void
+        +edit(int, string) void
+    }
+
+    class TipeKegiatan {
+        <<enumeration>>
+        WAJIB_HADIR
+        TERBUKA
+    }
+
+    class StatusRsvp {
+        <<enumeration>>
+        TERDAFTAR
+        DIBATALKAN
+    }
+
+    class StatusSesi {
+        <<enumeration>>
+        TERJADWAL
+        BERLANGSUNG
+        SELESAI
+    }
+
+    class StatusTugas {
+        <<enumeration>>
+        BELUM
+        SEDANG
+        SELESAI
+    }
+
+    Kegiatan "1" *-- "1..*" Sesi : memiliki
+    Sesi "1" *-- "0..*" Rundown : memiliki
+    Kegiatan "1" *-- "0..*" DivisiPanitia : memiliki
+    DivisiPanitia "1" *-- "0..*" TugasPanitia : memiliki
+    User "1" --> "0..*" TugasPanitia : mengerjakan
+    Kegiatan "1" *-- "0..*" Rsvp : menerima
+    User "1" --> "0..*" Rsvp : mendaftar
+    Sesi "1" *-- "0..*" Presensi : mencatat
+    User "1" --> "0..*" Presensi : mengisi
+    Kegiatan "1" *-- "0..*" Anggaran : memiliki
+    Kegiatan "1" *-- "0..*" Dokumentasi : memiliki
+    User "1" --> "0..*" Dokumentasi : mengunggah
+    Kegiatan "1" *-- "0..*" Evaluasi : menerima
+    User "1" --> "0..*" Evaluasi : memberi
+
+    Kegiatan --> TipeKegiatan
+    Rsvp --> StatusRsvp
+    Sesi --> StatusSesi
+    TugasPanitia --> StatusTugas

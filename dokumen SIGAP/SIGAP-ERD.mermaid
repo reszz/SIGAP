@@ -1,0 +1,126 @@
+%% SIGAP - Entity Relationship Diagram
+%% Referensi: SRS.md §5 Kebutuhan Data (Model Entitas)
+
+erDiagram
+    USER ||--o{ TUGAS_PANITIA : "mengerjakan"
+    USER ||--o{ RSVP : "mendaftar"
+    USER ||--o{ PRESENSI : "mengisi"
+    USER ||--o{ EVALUASI : "memberi"
+    USER ||--o{ DOKUMENTASI : "mengunggah"
+
+    KEGIATAN ||--|{ SESI : "memiliki"
+    KEGIATAN ||--o{ DIVISI_PANITIA : "memiliki"
+    KEGIATAN ||--o{ RSVP : "menerima"
+    KEGIATAN ||--o{ ANGGARAN : "memiliki"
+    KEGIATAN ||--o{ DOKUMENTASI : "memiliki"
+    KEGIATAN ||--o{ EVALUASI : "menerima"
+
+    SESI ||--o{ RUNDOWN : "memiliki"
+    SESI ||--o{ PRESENSI : "mencatat"
+
+    DIVISI_PANITIA ||--o{ TUGAS_PANITIA : "memiliki"
+
+    USER {
+        int id PK
+        string name
+        string nim "unique"
+        string email "unique"
+        string password
+        string role "pengurus | anggota"
+        timestamp created_at
+    }
+
+    KEGIATAN {
+        int id PK
+        string nama
+        text deskripsi
+        string tipe "wajib_hadir | terbuka"
+        int kuota "nullable, hanya jika tipe = terbuka"
+        string warna "hex, auto-assign, bisa diubah manual"
+        timestamp created_at
+    }
+
+    SESI {
+        int id PK
+        int kegiatan_id FK
+        date tanggal
+        time waktu_mulai
+        time waktu_selesai
+        string lokasi
+        string kode_presensi "unique, random token"
+    }
+    %% Catatan: status (terjadwal|berlangsung|selesai) TIDAK disimpan sebagai kolom.
+    %% Dihitung on-the-fly (computed attribute) dari waktu_mulai/waktu_selesai vs waktu saat ini.
+    %% Lihat SIGAP-DataDictionary.md §3 dan SIGAP-StateDiagram-Sesi.mermaid.
+
+    RUNDOWN {
+        int id PK
+        int sesi_id FK
+        time waktu
+        string uraian_acara
+        int urutan
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    DIVISI_PANITIA {
+        int id PK
+        int kegiatan_id FK
+        string nama_divisi
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TUGAS_PANITIA {
+        int id PK
+        int divisi_id FK
+        int user_id FK
+        string deskripsi_tugas
+        string status "belum | sedang | selesai"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RSVP {
+        int id PK
+        int kegiatan_id FK
+        int user_id FK
+        string status "terdaftar | dibatalkan"
+        timestamp waktu_daftar
+    }
+
+    PRESENSI {
+        int id PK
+        int sesi_id FK
+        int user_id FK
+        text catatan "opsional"
+        timestamp waktu_isi
+    }
+
+    ANGGARAN {
+        int id PK
+        int kegiatan_id FK
+        string jenis "pemasukan | pengeluaran"
+        string sumber_kategori
+        decimal estimasi
+        decimal realisasi
+    }
+
+    DOKUMENTASI {
+        int id PK
+        int kegiatan_id FK
+        string tipe "foto | notulen"
+        string file_path
+        int uploaded_by FK
+        timestamp created_at
+    }
+
+    EVALUASI {
+        int id PK
+        int kegiatan_id FK
+        int user_id FK
+        int rating "1-5"
+        text komentar "opsional, bebas"
+        timestamp created_at
+        timestamp updated_at "terisi saat evaluasi diedit"
+    }

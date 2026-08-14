@@ -11,10 +11,14 @@ trait RedirectsToCurrentTeam
     protected function redirectPathForCurrentTeam(Request $request, string $redirect): string
     {
         $team = $this->currentTeam($request);
+        $user = $request->user();
 
         URL::defaults(['current_team' => $team->slug]);
 
-        return "/{$team->slug}{$redirect}";
+        // Arahkan ke dashboard sesuai role, abaikan $redirect bawaan Fortify
+        $rolePath = $user?->isPengurus() ? 'pengurus' : 'anggota';
+
+        return "/{$team->slug}/{$rolePath}/dashboard";
     }
 
     protected function currentTeam(Request $request): Team

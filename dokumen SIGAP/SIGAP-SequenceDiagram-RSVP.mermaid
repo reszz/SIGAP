@@ -1,0 +1,42 @@
+%% SIGAP - Sequence Diagram: Alur RSVP (Instant, versi sederhana)
+%% Tidak ada proses persetujuan Pengurus - RSVP langsung terdaftar selama kuota tersedia.
+
+sequenceDiagram
+    actor A as Anggota
+    participant FE as Frontend (React)
+    participant BE as Backend (Laravel)
+    participant DB as Database
+
+    A->>FE: Klik "RSVP Sekarang" pada Kegiatan Terbuka
+    FE->>BE: POST /kegiatan/{id}/rsvp
+    BE->>DB: BEGIN TRANSACTION + lock row kegiatan
+    BE->>DB: Hitung sisa kuota (COUNT rsvp WHERE status=terdaftar)
+
+    alt Kuota penuh
+        BE->>DB: ROLLBACK
+        BE-->>FE: 422 Kuota penuh
+        FE-->>A: Tampilkan pesan "Kuota sudah penuh"
+    else Kuota tersedia
+        BE->>DB: INSERT/UPDATE rsvp (status = terdaftar)
+        BE->>DB: COMMIT
+        DB-->>BE: OK
+        BE-->>FE: 201 RSVP berhasil, status=terdaftar
+        FE-->>A: Tampilkan StatusSticker "Terdaftar" + sisa kuota ter-update
+    end
+
+    Note over A,DB: --- Pengurus hanya melihat, tidak ada aksi setuju/tolak ---
+    participant P as Pengurus
+    P->>FE: Buka daftar peserta RSVP (read-only)
+    FE->>BE: GET /kegiatan/{id}/rsvp
+    BE->>DB: SELECT rsvp WHERE status=terdaftar
+    DB-->>BE: Daftar peserta terdaftar
+    BE-->>FE: Data peserta
+    FE-->>P: Tampilkan daftar (tanpa tombol setujui/tolak)
+
+    Note over A,DB: --- Anggota membatalkan RSVP ---
+    A->>FE: Klik "Batalkan RSVP"
+    FE->>BE: DELETE /kegiatan/{id}/rsvp
+    BE->>DB: UPDATE rsvp SET status = dibatalkan
+    Note right of DB: Slot kuota otomatis kembali tersedia\nkarena kuota hanya menghitung status=terdaftar
+    BE-->>FE: 200 Dibatalkan
+    FE-->>A: Tampilkan StatusSticker "Dibatalkan"
