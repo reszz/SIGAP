@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\AnggaranController;
 use App\Http\Controllers\AnggotaController;
@@ -14,43 +14,19 @@ use App\Http\Controllers\RiwayatSayaController;
 use App\Http\Controllers\RsvpController;
 use App\Http\Controllers\RundownController;
 use App\Http\Controllers\SesiController;
-use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboard;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\TugasPanitiaController;
 use App\Http\Middleware\EnsureTeamMembership;
 use App\Http\Middleware\EnsureUserHasRole;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
-
-// Generic /dashboard redirect — mempertahankan route('dashboard') untuk Fortify dan test lama
-Route::middleware(['auth', 'verified'])->get('/dashboard', function (Request $request) {
-    $user = $request->user();
-    $team = $user->currentTeam;
-    if (! $team) {
-        return redirect()->route('teams.create');
-    }
-    if ($user->role === 'pengurus') {
-        return redirect()->route('pengurus.dashboard', $team->slug);
-    }
-
-    return redirect()->route('anggota.dashboard', $team->slug);
-})->name('dashboard');
 
 // Invitation routes (tidak butuh team prefix)
 Route::middleware(['auth'])->group(function () {
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
 });
-
-// Super Admin (global_role = super_admin)
-Route::middleware(['auth', 'verified', 'super_admin'])
-    ->prefix('super-admin')
-    ->name('super-admin.')
-    ->group(function () {
-        Route::get('dashboard', SuperAdminDashboard::class)->name('dashboard');
-    });
 
 Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
@@ -101,6 +77,7 @@ Route::prefix('{current_team}')
                 Route::get('laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
                 Route::get('laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
 
+
                 // Manajemen Kegiatan (FR-05ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“FR-07)
                 Route::resource('kegiatan', KegiatanController::class)
                     ->except('show')
@@ -147,7 +124,15 @@ Route::prefix('{current_team}')
             ->name('anggota.')
             ->group(function () {
                 Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+                // Laporan (FR-39-40)
+                Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+                Route::get('laporan/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
+                Route::get('laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
+                Route::get('laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
+
             });
     });
 
 require __DIR__.'/settings.php';
+

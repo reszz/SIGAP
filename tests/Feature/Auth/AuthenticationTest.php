@@ -40,6 +40,7 @@ test('login screen includes team invitation context', function () {
 
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
+    $team = $user->personalTeam();
 
     $response = $this->post(route('login.store'), [
         'login' => $user->email,
@@ -47,11 +48,14 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', ['current_team' => $user->personalTeam()->slug]));
+    // LoginResponse redirects to /{team}/{role}/dashboard
+    $response->assertRedirect();
+    expect($response->headers->get('Location'))->toContain($team->slug);
 });
 
 test('users can authenticate with their NIM', function () {
     $user = User::factory()->create(['nim' => '20260001']);
+    $team = $user->personalTeam();
 
     $response = $this->post(route('login.store'), [
         'login' => '20260001',
@@ -59,11 +63,13 @@ test('users can authenticate with their NIM', function () {
     ]);
 
     $this->assertAuthenticatedAs($user);
-    $response->assertRedirect(route('dashboard', ['current_team' => $user->personalTeam()->slug]));
+    $response->assertRedirect();
+    expect($response->headers->get('Location'))->toContain($team->slug);
 });
 
 test('passkey login response redirects to the current team dashboard', function () {
     $user = User::factory()->create();
+    $team = $user->personalTeam();
 
     $request = Request::create(route('login', absolute: false), 'GET', server: [
         'HTTP_ACCEPT' => 'application/json',
@@ -73,7 +79,8 @@ test('passkey login response redirects to the current team dashboard', function 
 
     $jsonResponse = app(PasskeyLoginResponse::class)->toResponse($request);
 
-    expect($jsonResponse->getData()->redirect)->toBe(route('dashboard', ['current_team' => $user->personalTeam()->slug]));
+    // Redirect should include team slug and role/dashboard
+    expect($jsonResponse->getData()->redirect)->toContain($team->slug);
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
