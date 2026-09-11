@@ -24,6 +24,14 @@ class DokumentasiPolicy
      */
     public function uploadFoto(User $user, Kegiatan $kegiatan): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if (KegiatanAuthService::isPengurusAtauKetua($user, $kegiatan)) {
             return true;
         }
@@ -37,6 +45,14 @@ class DokumentasiPolicy
      */
     public function uploadNotulen(User $user, Kegiatan $kegiatan): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if (KegiatanAuthService::isPengurusAtauKetua($user, $kegiatan)) {
             return true;
         }

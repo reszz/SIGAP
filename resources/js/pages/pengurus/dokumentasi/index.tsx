@@ -1,10 +1,14 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronDown, Download, FileText, ImageIcon, Trash2, Upload } from 'lucide-react';
+
 import { useRef, useState } from 'react';
-import { index as dokumentasiIndex } from '@/routes/dokumentasi';
-import { store, destroy } from '@/routes/dokumentasi';
-import { download as dokumentasiDownload } from '@/routes/dokumentasi';
+import {kegiatanBreadcrumbs} from '@/lib/breadcrumbs';
+import { index as dokumentasiIndex, store, destroy, download as dokumentasiDownload } from '@/routes/dokumentasi';
 import { confirmDelete, Toast } from '@/lib/sweetalert';
+import { index as panitiaIndex } from '@/routes/panitia';
+import ReadOnlyBanner from '@/components/read-only-banner';
+import AccessRestrictionCard from '@/components/access-restriction-card';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +29,7 @@ type Props = {
     dokumentasi: DokItem[];
     canUploadFoto: boolean;
     canUploadNotulen: boolean;
+    isReadOnly?: boolean;
 };
 
 // ─── Upload Form ──────────────────────────────────────────────────────────────
@@ -83,19 +88,19 @@ function UploadForm({
     return (
         <form
             onSubmit={submit}
-            className="rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+            className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-4 shadow-xs sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]"
         >
-            <h3 className="font-display mb-4 text-base font-bold text-neutral-900 dark:text-neutral-100">
+            <h3 className="mb-3 font-display text-sm font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                 Upload Berkas Baru
             </h3>
 
-            <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                 {/* Tipe radio */}
-                <div>
-                    <p className="mb-2 text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
-                        Tipe Dokumen <span className="text-red-500">*</span>
+                <div className="w-full sm:w-auto">
+                    <p className="mb-2 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                        Tipe Dokumen <span className="text-[#C4514A]">*</span>
                     </p>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3 sm:gap-4">
                         {canUploadFoto && (
                             <label className="flex cursor-pointer items-center gap-2">
                                 <input
@@ -103,11 +108,17 @@ function UploadForm({
                                     name="tipe"
                                     value="foto"
                                     checked={tipe === 'foto'}
-                                    onChange={() => { setTipe('foto'); setFile(null); if (inputRef.current) inputRef.current.value = ''; }}
-                                    className="text-[#4F46E5] focus:ring-[#4F46E5]"
+                                    onChange={() => {
+                                        setTipe('foto');
+                                        setFile(null);
+                                        if (inputRef.current)
+                                            inputRef.current.value = '';
+                                    }}
+                                    className="text-[#4A5FD1] focus:ring-[#4A5FD1]"
                                 />
-                                <span className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                    <ImageIcon className="size-4 text-[#4F46E5]" /> Foto Dokumentasi
+                                <span className="flex items-center gap-1.5 text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                    <ImageIcon className="size-3.5 text-[#4A5FD1]" />{' '}
+                                    Foto
                                 </span>
                             </label>
                         )}
@@ -118,11 +129,17 @@ function UploadForm({
                                     name="tipe"
                                     value="notulen"
                                     checked={tipe === 'notulen'}
-                                    onChange={() => { setTipe('notulen'); setFile(null); if (inputRef.current) inputRef.current.value = ''; }}
-                                    className="text-[#4F46E5] focus:ring-[#4F46E5]"
+                                    onChange={() => {
+                                        setTipe('notulen');
+                                        setFile(null);
+                                        if (inputRef.current)
+                                            inputRef.current.value = '';
+                                    }}
+                                    className="text-[#4A5FD1] focus:ring-[#4A5FD1]"
                                 />
-                                <span className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                    <FileText className="size-4 text-blue-500" /> Notulen Acara
+                                <span className="flex items-center gap-1.5 text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                    <FileText className="size-3.5 text-[#4A5FD1]" />{' '}
+                                    Notulen
                                 </span>
                             </label>
                         )}
@@ -130,14 +147,18 @@ function UploadForm({
                 </div>
 
                 {/* File input */}
-                <div className="flex-1 min-w-56">
-                    <p className="mb-2 text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
-                        Pilih File <span className="text-red-500">*</span>
+                <div className="w-full min-w-0 flex-1">
+                    <p className="mb-2 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                        Pilih File <span className="text-[#C4514A]">*</span>
                         {tipe === 'foto' && (
-                            <span className="ml-1 font-normal text-neutral-400">(gambar JPG/PNG, max 10 MB)</span>
+                            <span className="ml-1 font-normal text-[#727C8E]/70 dark:text-[#8C97A8]/70">
+                                (JPG/PNG, max 10 MB)
+                            </span>
                         )}
                         {tipe === 'notulen' && (
-                            <span className="ml-1 font-normal text-neutral-400">(PDF/DOC/DOCX, max 20 MB)</span>
+                            <span className="ml-1 font-normal text-[#727C8E]/70 dark:text-[#8C97A8]/70">
+                                (PDF/DOC/DOCX, max 20 MB)
+                            </span>
                         )}
                     </p>
                     <input
@@ -145,25 +166,28 @@ function UploadForm({
                         type="file"
                         accept={acceptAttr}
                         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                        className="w-full text-xs text-neutral-600 dark:text-neutral-400 file:mr-3 file:rounded-xl file:border-0 file:bg-[#EEF2FF] file:px-3.5 file:py-2 file:text-xs file:font-bold file:text-[#4F46E5] hover:file:bg-[#E0E7FF] dark:file:bg-[#4F46E5]/20 dark:file:text-[#818CF8]"
+                        className="w-full min-w-0 text-[11px] text-[#727C8E] file:mr-2 file:rounded-md file:border-0 file:bg-[#4A5FD1]/10 file:px-2.5 file:py-1.5 file:text-[11px] file:font-semibold file:text-[#4A5FD1] hover:file:bg-[#4A5FD1]/20 dark:text-[#8C97A8] dark:file:bg-[#4A5FD1]/20 dark:file:text-[#8FA0FA]"
                     />
-                    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+                    {error && (
+                        <p className="mt-1 text-xs text-[#C4514A]">{error}</p>
+                    )}
                 </div>
 
+                {/* Submit button */}
                 <button
                     type="submit"
-                    disabled={uploading || !file}
-                    className="flex items-center gap-1.5 rounded-2xl bg-[#4F46E5] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-[#4F46E5]/25 transition hover:bg-[#4338CA] disabled:opacity-50"
+                    disabled={uploading}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#4A5FD1] px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3B4DB8] disabled:opacity-50 sm:w-auto sm:py-2"
                 >
                     <Upload className="size-4" />
-                    {uploading ? 'Mengunggah...' : 'Upload Berkas'}
+                    <span>{uploading ? 'Mengunggah...' : 'Unggah Berkas'}</span>
                 </button>
             </div>
         </form>
     );
 }
 
-// ─── File List ────────────────────────────────────────────────────────────────
+// ─── Dokumentasi List ─────────────────────────────────────────────────────────
 
 function DokList({
     items,
@@ -177,7 +201,9 @@ function DokList({
     canDelete: boolean;
 }) {
     async function hapus(id: number) {
-        const confirmed = await confirmDelete('File Dokumentasi', 'Yakin ingin menghapus berkas ini?');
+        const item = items.find((i) => i.id === id);
+        const label = item ? `"${item.filename}"` : 'berkas ini';
+        const confirmed = await confirmDelete('Berkas', `Hapus ${label}?`);
         if (!confirmed) return;
         router.delete(destroy.url({ current_team: teamSlug, dokumentasi: id }), {
             preserveScroll: true,
@@ -192,53 +218,58 @@ function DokList({
 
     if (items.length === 0) {
         return (
-            <p className="mt-4 text-xs italic text-neutral-400">
+            <p className="mt-4 text-xs italic text-[#727C8E]/70 dark:text-[#8C97A8]/70">
                 Belum ada berkas {tipe === 'foto' ? 'foto' : 'notulen'}.
             </p>
         );
     }
 
     return (
-        <div className="mt-4 flex flex-col gap-2.5">
+        <div className="mt-3 flex flex-col gap-2.5">
             {items.map((d) => (
                 <div
                     key={d.id}
-                    className="group flex items-center justify-between gap-3 rounded-2xl border border-neutral-200/60 bg-neutral-50/50 p-3 text-xs transition hover:border-[#4F46E5]/40 hover:bg-white dark:border-neutral-800 dark:bg-neutral-800/40 dark:hover:bg-neutral-900"
+                    className="group flex flex-col justify-between gap-3 rounded-lg border border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/50 p-3 text-xs transition hover:border-[#4A5FD1]/40 sm:flex-row sm:items-center dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/40"
                 >
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                             {tipe === 'foto' ? (
                                 <ImageIcon className="size-4" />
                             ) : (
                                 <FileText className="size-4" />
                             )}
                         </div>
-                        <div className="min-w-0">
-                            <p className="truncate font-bold text-neutral-800 transition group-hover:text-[#4F46E5] dark:text-neutral-200">
+                        <div className="min-w-0 flex-1">
+                            <p className="w-full font-semibold break-all text-[#1E2430] transition group-hover:text-[#4A5FD1] dark:text-[#E6ECF5] dark:group-hover:text-[#8FA0FA]">
                                 {d.filename}
                             </p>
-                            <p className="text-[11px] text-neutral-400">
-                                Diunggah oleh: {d.uploaded_by} • {d.created_at}
+                            <p className="font-mono-sigap mt-0.5 text-[10px] text-[#727C8E] dark:text-[#8C97A8]">
+                                <span className="break-words">
+                                    Oleh: {d.uploaded_by} • {d.created_at}
+                                </span>
                             </p>
                         </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex w-full shrink-0 items-center justify-end gap-2 self-end border-t border-[rgba(30,36,48,0.06)] pt-2 sm:w-auto sm:self-auto sm:border-t-0 sm:pt-0 dark:border-[rgba(255,255,255,0.06)]">
                         <a
-                            href={dokumentasiDownload.url({ current_team: teamSlug, dokumentasi: d.id })}
+                            href={dokumentasiDownload.url({
+                                current_team: teamSlug,
+                                dokumentasi: d.id,
+                            })}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-700 shadow-2xs transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                            className="inline-flex items-center gap-1.5 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E2430] transition hover:bg-[#F6F7F9] dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                         >
-                            <Download className="size-3.5 text-[#4F46E5]" />
-                            Unduh
+                            <Download className="size-3 text-[#4A5FD1]" />
+                            <span>Unduh</span>
                         </a>
                         {canDelete && (
                             <button
                                 onClick={() => hapus(d.id)}
                                 title="Hapus berkas"
-                                className="rounded-xl p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+                                className="rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#C4514A]/10 hover:text-[#C4514A]"
                             >
-                                <Trash2 className="size-4" />
+                                <Trash2 className="size-4 sm:size-3.5" />
                             </button>
                         )}
                     </div>
@@ -256,12 +287,13 @@ export default function DokumentasiIndex({
     dokumentasi,
     canUploadFoto,
     canUploadNotulen,
+    isReadOnly,
 }: Props) {
     const { url } = usePage();
     const teamSlug = url.split('/')[1];
 
     const selectedKegiatan = kegiatanList.find((k) => k.id === selectedKegiatanId) ?? null;
-    const canUploadAny = canUploadFoto || canUploadNotulen;
+    const canUploadAny = !isReadOnly && (canUploadFoto || canUploadNotulen);
 
     const fotoList = dokumentasi.filter((d) => d.tipe === 'foto');
     const notulenList = dokumentasi.filter((d) => d.tipe === 'notulen');
@@ -275,23 +307,32 @@ export default function DokumentasiIndex({
             <Head title="Dokumentasi & Berkas" />
 
             <div className="flex h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                {isReadOnly && (
+                    <ReadOnlyBanner
+                        roleName="Pembina"
+                        message="Anda sedang dalam mode pemantauan dokumentasi. Anda dapat melihat dan mengunduh berkas dokumentasi serta notulen tanpa izin mengunggah atau menghapus."
+                    />
+                )}
+
                 {/* ─── Header ─── */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="font-display text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-100">
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
                             Dokumentasi & Berkas
                         </h1>
-                        <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                        <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
                             Arsip foto kegiatan dan notulen pertanggungjawaban
                         </p>
                     </div>
 
                     {kegiatanList.length > 0 && (
-                        <div className="relative min-w-56">
+                        <div className="relative w-full min-w-0 sm:w-64">
                             <select
                                 value={selectedKegiatanId ?? ''}
-                                onChange={(e) => pilihKegiatan(Number(e.target.value))}
-                                className="w-full appearance-none rounded-2xl border border-neutral-200/70 bg-white py-2.5 pl-4 pr-10 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+                                onChange={(e) =>
+                                    pilihKegiatan(Number(e.target.value))
+                                }
+                                className="w-full appearance-none truncate rounded-lg border border-[rgba(30,36,48,0.12)] bg-white py-2 pr-10 pl-3.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                             >
                                 <option value="" disabled>
                                     Pilih Kegiatan
@@ -302,37 +343,37 @@ export default function DokumentasiIndex({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown className="pointer-events-none absolute right-3 top-3 size-4 text-neutral-400" />
+                            <ChevronDown className="pointer-events-none absolute top-2.5 right-3 size-4 text-[#727C8E]" />
                         </div>
                     )}
                 </div>
 
                 {/* ─── Belum pilih kegiatan ─── */}
-                {!selectedKegiatan ? (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <FileText className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            {kegiatanList.length === 0
-                                ? 'Kamu belum memiliki akses dokumentasi untuk kegiatan manapun.'
-                                : 'Pilih kegiatan di atas untuk melihat dokumentasi & notulen.'}
+                {kegiatanList.length === 0 ? (
+                    <AccessRestrictionCard actionType="dokumentasi" />
+                ) : !selectedKegiatan ? (
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <FileText className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                        <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
+                            Pilih kegiatan di atas untuk melihat dokumentasi & notulen.
                         </p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-6">
                         {/* Grid Foto + Notulen */}
-                        <div className="grid gap-6 md:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
                             {/* Foto */}
-                            <div className="rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                                <div className="flex items-center justify-between border-b border-neutral-100 pb-4 dark:border-neutral-800">
+                            <div className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-4 shadow-xs sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(30,36,48,0.08)] pb-3.5 dark:border-[rgba(255,255,255,0.08)]">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex size-8 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
+                                        <div className="flex size-7.5 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                             <ImageIcon className="size-4" />
                                         </div>
-                                        <h2 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                        <h2 className="font-display text-sm font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                             Foto Dokumentasi
                                         </h2>
                                     </div>
-                                    <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[10px] font-bold text-neutral-500 dark:bg-neutral-800">
+                                    <span className="font-mono-sigap rounded-md bg-[#4A5FD1]/12 px-2 py-0.5 text-[11px] font-semibold text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                         {fotoList.length} Foto
                                     </span>
                                 </div>
@@ -345,17 +386,17 @@ export default function DokumentasiIndex({
                             </div>
 
                             {/* Notulen */}
-                            <div className="rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                                <div className="flex items-center justify-between border-b border-neutral-100 pb-4 dark:border-neutral-800">
+                            <div className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-4 shadow-xs sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                                <div className="flex items-center justify-between border-b border-[rgba(30,36,48,0.08)] pb-3.5 dark:border-[rgba(255,255,255,0.08)]">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex size-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                                        <div className="flex size-7.5 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                             <FileText className="size-4" />
                                         </div>
-                                        <h2 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                        <h2 className="font-display text-sm font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                             Notulen Acara
                                         </h2>
                                     </div>
-                                    <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[10px] font-bold text-neutral-500 dark:bg-neutral-800">
+                                    <span className="font-mono-sigap rounded-md bg-[#4A5FD1]/12 px-2 py-0.5 text-[11px] font-semibold text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                         {notulenList.length} Notulen
                                     </span>
                                 </div>
@@ -383,3 +424,26 @@ export default function DokumentasiIndex({
         </>
     );
 }
+
+DokumentasiIndex.layout = (
+    page: Props & {
+        currentTeam?: { slug: string } | null;
+    },
+) => {
+    const teamSlug = page.currentTeam?.slug ?? '';
+    const selectedKegiatan = page.kegiatanList.find(
+        (k) => k.id === page.selectedKegiatanId,
+    );
+
+    return {
+        breadcrumbs: kegiatanBreadcrumbs(
+            'Kegiatan',
+            teamSlug ? dokumentasiIndex.url(teamSlug) : '/kegiatan',
+            {
+                title: 'Dokumentasi & Berkas',
+                href: teamSlug ? panitiaIndex.url(teamSlug) : '/dokumentasi',
+            },
+            selectedKegiatan && { title: selectedKegiatan.nama, href: '' },
+        ),
+    };
+};

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Enums\GlobalRole;
 use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Models\Team;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
         $totalKegiatan = Kegiatan::count();
 
         // Per-team summary (top 10 by kegiatan count)
-        $teams = Team::withCount(['members', 'kegiatan' => fn ($q) => $q->withoutTrashed()])
+        $teams = Team::withCount(['members', 'kegiatan'])
             ->orderByDesc('kegiatan_count')
             ->limit(10)
             ->get()
@@ -36,12 +37,13 @@ class DashboardController extends Controller
         // User registrasi terbaru (10)
         $userTerbaru = User::orderByDesc('created_at')
             ->limit(10)
-            ->get(['id', 'name', 'email', 'global_role', 'created_at'])
+            ->get(['id', 'name', 'email', 'role', 'created_at'])
             ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'global_role' => $u->global_role?->value ?? 'user',
+                'global_role' => $u->role instanceof GlobalRole ? $u->role->value : (string) $u->role,
+                'role' => $u->role instanceof GlobalRole ? $u->role->value : (string) $u->role,
                 'created_at' => $u->created_at?->toIso8601String(),
             ]);
 

@@ -22,12 +22,23 @@ class DokumentasiIndexController extends Controller
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         $user = $request->user();
 
-        $semuaKegiatan = Kegiatan::where('team_id', $team->id)
+        $periodeId = $user->current_periode_id;
+        $kegiatanQuery = Kegiatan::where('team_id', $team->id);
+        if ($periodeId) {
+            $kegiatanQuery->where(function ($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId)
+                    ->orWhereNull('periode_id');
+            });
+        }
+
+        $semuaKegiatan = $kegiatanQuery
             ->orderByDesc('created_at')
             ->get(['id', 'nama', 'warna']);
 
         $kegiatanList = $semuaKegiatan->filter(
-            fn ($k) => Gate::forUser($user)->allows('dokumentasi.upload-foto', $k)
+            fn ($k) => $user->isSuperAdmin()
+                || $user->isPembina()
+                || Gate::forUser($user)->allows('dokumentasi.upload-foto', $k)
                 || Gate::forUser($user)->allows('dokumentasi.upload-notulen', $k)
         )->values();
 
@@ -36,8 +47,16 @@ class DokumentasiIndexController extends Controller
             ? $semuaKegiatan->firstWhere('id', $selectedKegiatanId)
             : null;
 
-        $canUploadFoto = $selectedKegiatan && Gate::forUser($user)->allows('dokumentasi.upload-foto', $selectedKegiatan);
-        $canUploadNotulen = $selectedKegiatan && Gate::forUser($user)->allows('dokumentasi.upload-notulen', $selectedKegiatan);
+        $currentPeriode = $user->currentPeriode;
+        $isPeriodeEditable = ! $currentPeriode || $currentPeriode->is_aktif || $currentPeriode->isLatest();
+        $isReadOnly = $user->isPembina() || (! $isPeriodeEditable && ! $user->isSuperAdmin());
+
+        $canUploadFoto = ! $isReadOnly
+            && $selectedKegiatan
+            && Gate::forUser($user)->allows('dokumentasi.upload-foto', $selectedKegiatan);
+        $canUploadNotulen = ! $isReadOnly
+            && $selectedKegiatan
+            && Gate::forUser($user)->allows('dokumentasi.upload-notulen', $selectedKegiatan);
 
         $dokumentasi = $selectedKegiatan
             ? $selectedKegiatan->dokumentasi()->with('uploadedBy:id,name')->orderByDesc('created_at')->get()
@@ -57,6 +76,7 @@ class DokumentasiIndexController extends Controller
             'dokumentasi' => $dokumentasi->values(),
             'canUploadFoto' => $canUploadFoto,
             'canUploadNotulen' => $canUploadNotulen,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 }

@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils';
+import SigapPulse from '@/components/ui/sigap-pulse';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Status =
+export type StatusType =
     | 'terjadwal'
     | 'berlangsung'
     | 'selesai'
@@ -11,84 +12,124 @@ type Status =
     | 'terlambat'
     | 'izin'
     | 'belum'
-    | 'sedang';
-
-type StikerVariant = 'default' | 'neg' | 'pos' | 'flat';
+    | 'sedang'
+    | 'draft'
+    | 'proposal'
+    | 'review'
+    | 'delivered'
+    | 'overdue'
+    | 'belum_ada_sesi';
 
 interface StatusStikerProps {
-    status: Status;
+    status: StatusType | string;
     label?: string;
-    variant?: StikerVariant;
+    withPulse?: boolean;
     className?: string;
 }
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Config (design.md: 12% opacity tint background + solid status text) ─────
 
 const STATUS_CONFIG: Record<
-    Status,
-    { label: string; border: string; text: string; bg: string }
+    string,
+    { label: string; bg: string; text: string; hasPulse?: boolean }
 > = {
+    // Draft / Proposal / Belum
     terjadwal: {
         label: 'Terjadwal',
-        border: 'border-[#4F46E5]',
-        text: 'text-[#4F46E5] dark:text-[#818CF8]',
-        bg: 'bg-white dark:bg-[#111827]',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
     },
-    berlangsung: {
-        label: 'Berlangsung',
-        border: 'border-[#F59E0B]',
-        text: 'text-[#D97706] dark:text-[#F59E0B]',
-        bg: 'bg-white dark:bg-[#111827]',
+    draft: {
+        label: 'Draft',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
     },
-    selesai: {
-        label: 'Selesai',
-        border: 'border-[#10B981]',
-        text: 'text-[#059669] dark:text-[#10B981]',
-        bg: 'bg-white dark:bg-[#111827]',
-    },
-    alpa: {
-        label: 'Alpa',
-        border: 'border-[#EF4444]',
-        text: 'text-[#DC2626] dark:text-[#EF4444]',
-        bg: 'bg-white dark:bg-[#111827]',
-    },
-    hadir: {
-        label: 'Hadir',
-        border: 'border-[#10B981]',
-        text: 'text-[#059669] dark:text-[#10B981]',
-        bg: 'bg-white dark:bg-[#111827]',
-    },
-    terlambat: {
-        label: 'Terlambat',
-        border: 'border-[#F59E0B]',
-        text: 'text-[#D97706] dark:text-[#F59E0B]',
-        bg: 'bg-white dark:bg-[#111827]',
-    },
-    izin: {
-        label: 'Izin',
-        border: 'border-[#0EA5E9]',
-        text: 'text-[#0284C7] dark:text-[#0EA5E9]',
-        bg: 'bg-white dark:bg-[#111827]',
+    proposal: {
+        label: 'Proposal',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
     },
     belum: {
-        label: 'Belum',
-        border: 'border-neutral-300 dark:border-neutral-700',
-        text: 'text-neutral-500 dark:text-neutral-400',
-        bg: 'bg-white dark:bg-[#111827]',
+        label: 'Belum Berjalan',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
+    },
+    belum_ada_sesi: {
+        label: 'Belum Ada Sesi',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
+    },
+
+    // Ongoing / Sedang Berjalan (Sigap Blue)
+    berlangsung: {
+        label: 'Berlangsung',
+        bg: 'bg-[#4A5FD1]/12 dark:bg-[#4A5FD1]/20',
+        text: 'text-[#4A5FD1] dark:text-[#8FA0FA]',
+        hasPulse: true,
     },
     sedang: {
         label: 'Sedang Dikerjakan',
-        border: 'border-[#F59E0B]',
-        text: 'text-[#D97706] dark:text-[#F59E0B]',
-        bg: 'bg-white dark:bg-[#111827]',
+        bg: 'bg-[#4A5FD1]/12 dark:bg-[#4A5FD1]/20',
+        text: 'text-[#4A5FD1] dark:text-[#8FA0FA]',
+        hasPulse: true,
     },
-};
+    ongoing: {
+        label: 'Ongoing',
+        bg: 'bg-[#4A5FD1]/12 dark:bg-[#4A5FD1]/20',
+        text: 'text-[#4A5FD1] dark:text-[#8FA0FA]',
+        hasPulse: true,
+    },
 
-const ROTATION: Record<StikerVariant, string> = {
-    default: 'rotate-sticker-neg',
-    neg: 'rotate-sticker-neg',
-    pos: 'rotate-sticker-pos',
-    flat: '',
+    // Review / Needs Attention (Amber pudar #B8862E)
+    review: {
+        label: 'Review',
+        bg: 'bg-[#B8862E]/12 dark:bg-[#B8862E]/20',
+        text: 'text-[#B8862E] dark:text-[#D4A142]',
+    },
+    terlambat: {
+        label: 'Terlambat',
+        bg: 'bg-[#B8862E]/12 dark:bg-[#B8862E]/20',
+        text: 'text-[#B8862E] dark:text-[#D4A142]',
+    },
+    izin: {
+        label: 'Izin',
+        bg: 'bg-[#727C8E]/12 dark:bg-[#727C8E]/20',
+        text: 'text-[#727C8E] dark:text-[#8C97A8]',
+    },
+
+    // Delivered / Selesai / Hadir (Sigap Teal #2E9E82)
+    selesai: {
+        label: 'Selesai',
+        bg: 'bg-[#2E9E82]/12 dark:bg-[#2E9E82]/20',
+        text: 'text-[#2E9E82] dark:text-[#34B394]',
+    },
+    hadir: {
+        label: 'Hadir',
+        bg: 'bg-[#2E9E82]/12 dark:bg-[#2E9E82]/20',
+        text: 'text-[#2E9E82] dark:text-[#34B394]',
+    },
+    delivered: {
+        label: 'Delivered',
+        bg: 'bg-[#2E9E82]/12 dark:bg-[#2E9E82]/20',
+        text: 'text-[#2E9E82] dark:text-[#34B394]',
+    },
+
+    // Overdue / Alpa / Urgent (Merah pudar #C4514A)
+    alpa: {
+        label: 'Alpa',
+        bg: 'bg-[#C4514A]/12 dark:bg-[#C4514A]/20',
+        text: 'text-[#C4514A] dark:text-[#D9615A]',
+    },
+    overdue: {
+        label: 'Overdue',
+        bg: 'bg-[#C4514A]/12 dark:bg-[#C4514A]/20',
+        text: 'text-[#C4514A] dark:text-[#D9615A]',
+    },
+    ditolak: {
+        label: 'Ditolak',
+        bg: 'bg-[#C4514A]/12 dark:bg-[#C4514A]/20',
+        text: 'text-[#C4514A] dark:text-[#D9615A]',
+    },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -96,25 +137,25 @@ const ROTATION: Record<StikerVariant, string> = {
 export function StatusStiker({
     status,
     label,
-    variant = 'default',
+    withPulse,
     className,
 }: StatusStikerProps) {
-    const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.terjadwal;
+    const key = (status || 'terjadwal').toLowerCase();
+    const config = STATUS_CONFIG[key] ?? STATUS_CONFIG.terjadwal;
     const displayLabel = label ?? config.label;
+    const shouldPulse = withPulse !== undefined ? withPulse : Boolean(config.hasPulse);
 
     return (
         <span
             className={cn(
-                'inline-flex items-center rounded-full border px-2.5 py-0.5',
-                'text-[11px] font-semibold leading-none tracking-wide',
+                'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5',
+                'text-[11px] font-medium leading-none tracking-tight whitespace-nowrap',
                 config.bg,
-                config.border,
                 config.text,
-                ROTATION[variant],
-                'transition-transform',
                 className,
             )}
         >
+            {shouldPulse && <SigapPulse className="mr-0.5" />}
             {displayLabel}
         </span>
     );

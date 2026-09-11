@@ -13,6 +13,14 @@ createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name === 'welcome':
+            case name === 'privacy-policy':
+            case name === 'placeholder':
+            case name.startsWith('profil/'):
+            case name.startsWith('kalender-publik/'):
+            case name.startsWith('keorganisasian/'):
+            case name.startsWith('presensi/'):
+            case name.startsWith('blog/'):
+            case name.startsWith('wish-wall/'):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

@@ -27,13 +27,24 @@ class SuratController extends Controller
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         $user = $request->user();
 
+        $periodeId = $user->current_periode_id;
+        $kegiatanQuery = Kegiatan::where('team_id', $team->id);
+        if ($periodeId) {
+            $kegiatanQuery->where(function ($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId)
+                    ->orWhereNull('periode_id');
+            });
+        }
+
         // Ambil semua kegiatan team, filter mana yang user punya akses
-        $semuaKegiatan = Kegiatan::where('team_id', $team->id)
+        $semuaKegiatan = $kegiatanQuery
             ->orderByDesc('created_at')
             ->get(['id', 'nama', 'warna']);
 
         $kegiatanList = $semuaKegiatan->filter(
-            fn ($k) => Gate::forUser($user)->allows('surat.manage', $k)
+            fn ($k) => $user->isSuperAdmin()
+                || $user->isPembina()
+                || Gate::forUser($user)->allows('surat.manage', $k)
                 || Gate::forUser($user)->allows('surat.manage-keluar', $k)
         )->values();
 
@@ -43,9 +54,13 @@ class SuratController extends Controller
             ? $semuaKegiatan->firstWhere('id', $selectedKegiatanId)
             : null;
 
-        // Flag otorisasi per tipe — menentukan apa yang ditampilkan di UI
-        $canManageMasuk = $selectedKegiatan && Gate::forUser($user)->allows('surat.manage', $selectedKegiatan);
-        $canManageKeluar = $selectedKegiatan && Gate::forUser($user)->allows('surat.manage-keluar', $selectedKegiatan);
+        $currentPeriode = $user->currentPeriode;
+        $isPeriodeEditable = ! $currentPeriode || $currentPeriode->is_aktif || $currentPeriode->isLatest();
+        $isReadOnly = $user->isPembina() || (! $isPeriodeEditable && ! $user->isSuperAdmin());
+
+        // Flag otorisasi per tipe — menentukan apa yang ditampilkan di UI (Pembina & periode arsip strictly read-only)
+        $canManageMasuk = ! $isReadOnly && $selectedKegiatan && Gate::forUser($user)->allows('surat.manage', $selectedKegiatan);
+        $canManageKeluar = ! $isReadOnly && $selectedKegiatan && Gate::forUser($user)->allows('surat.manage-keluar', $selectedKegiatan);
 
         // Daftar surat untuk kegiatan yang dipilih
         $filterTipe = $request->input('tipe'); // 'masuk', 'keluar', atau null (semua)
@@ -78,6 +93,7 @@ class SuratController extends Controller
             'filterTipe' => $filterTipe,
             'canManageMasuk' => $canManageMasuk,
             'canManageKeluar' => $canManageKeluar,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 

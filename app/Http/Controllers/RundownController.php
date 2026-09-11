@@ -12,7 +12,7 @@ class RundownController extends Controller
      * PUT /{current_team}/pengurus/sesi/{sesi}/rundown
      * Replace seluruh rundown satu sesi sekaligus (upsert pattern)
      *
-     * @param  array{waktu: string, uraian_acara: string, urutan: int}[]  $rundown
+     * @param  array{waktu: string, uraian_acara: string}[]  $rundown
      */
     public function upsert(Request $request, string $currentTeam, Sesi $sesi): RedirectResponse
     {
@@ -20,14 +20,20 @@ class RundownController extends Controller
             'rundown' => 'required|array',
             'rundown.*.waktu' => 'required|date_format:H:i',
             'rundown.*.uraian_acara' => 'required|string|max:255',
-            'rundown.*.urutan' => 'required|integer|min:1',
         ]);
 
         // Delete semua rundown lama dulu, lalu insert baru (replace semantics)
         $sesi->rundown()->delete();
 
-        foreach ($validated['rundown'] as $item) {
-            $sesi->rundown()->create($item);
+        // Reindex array untuk memastikan urutan sequential 0, 1, 2, ...
+        $rundownData = array_values($validated['rundown']);
+
+        foreach ($rundownData as $index => $item) {
+            $sesi->rundown()->create([
+                'waktu' => $item['waktu'],
+                'uraian_acara' => $item['uraian_acara'],
+                'urutan' => $index + 1,
+            ]);
         }
 
         return redirect()

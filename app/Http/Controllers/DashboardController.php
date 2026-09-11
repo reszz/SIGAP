@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Artikel;
+use App\Models\DivisiOrganisasi;
 use App\Models\Kegiatan;
 use App\Models\Presensi;
+use App\Models\Rsvp;
 use App\Models\Sesi;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Wish;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +29,7 @@ class DashboardController extends Controller
 
         abort_if(! $team, 403, 'User tidak terdaftar di Team mana pun.');
 
-        $props = $user->role === 'pengurus'
+        $props = ($user->isPengurus() || $user->isSuperAdmin() || $user->isPembina())
             ? $this->pengurusProps($team)
             : $this->anggotaProps($user, $team);
 
@@ -36,19 +40,39 @@ class DashboardController extends Controller
     {
         $totalKegiatan = Kegiatan::where('team_id', $team->id)->count();
         $totalAnggota = $team->members()->count();
-        $totalSesiSelesai = Sesi::whereHas('kegiatan', fn($q) => $q->where('team_id', $team->id))
-            ->whereDate('tanggal', '<', now())
+        $totalPresensi = Presensi::whereHas(
+            'sesi.kegiatan',
+            fn ($q) => $q->where('team_id', $team->id),
+        )->count();
+
+        $now = now();
+        $kegiatanAktif = Kegiatan::where('team_id', $team->id)
+            ->whereHas('sesi', fn ($q) => $q
+                ->whereRaw("CONCAT(tanggal, ' ', waktu_mulai) <= ?", [$now->format('Y-m-d H:i:s')])
+                ->whereRaw("CONCAT(tanggal, ' ', waktu_selesai) >= ?", [$now->format('Y-m-d H:i:s')]))
             ->count();
 
+        $kegiatanTerbaru = Kegiatan::where('team_id', $team->id)
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn (Kegiatan $k) => [
+                'id' => $k->id,
+                'nama' => $k->nama,
+                'tipe' => $k->tipe,
+                'warna' => $k->warna,
+                'created_at' => $k->created_at?->toDateString(),
+            ]);
+
         $kegiatanMendatang = Sesi::with('kegiatan')
-            ->whereHas('kegiatan', fn($q) => $q->where('team_id', $team->id))
+            ->whereHas('kegiatan', fn ($q) => $q->where('team_id', $team->id))
             ->whereDate('tanggal', '>=', now())
-            ->whereDate('tanggal', '<=', now()->addDays(30))
+            ->whereDate('tanggal', '<=', now()->addDays(365))
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
             ->limit(5)
             ->get()
-            ->map(fn(Sesi $sesi) => [
+            ->map(fn (Sesi $sesi) => [
                 'id' => $sesi->id,
                 'kegiatanId' => $sesi->kegiatan->id,
                 'kegiatanNama' => $sesi->kegiatan->nama,
@@ -57,52 +81,105 @@ class DashboardController extends Controller
                 'waktuMulai' => $sesi->waktu_mulai,
                 'lokasi' => $sesi->lokasi,
                 'status' => $sesi->status,
+                'kegiatanTipe' => $sesi->kegiatan->tipe,
+                'rsvpStatus' => null,  // pengurus tidak RSVP
+                'kuota' => $sesi->kegiatan->kuota,
+                'kuotaTerpakai' => null,
             ]);
 
-        // Rekap kehadiran per Member (top 10, sorted by attendance)
+        // Rekap kehadiran: satu query aggregated, bukan N+1
+        $hadirPerUser = Presensi::selectRaw('user_id, COUNT(*) as jumlah')
+            ->whereHas('sesi.kegiatan', fn ($q) => $q->where('team_id', $team->id))
+            ->groupBy('user_id')
+            ->pluck('jumlah', 'user_id');
+
         $rekapKehadiran = $team->members()
             ->orderBy('name')
             ->get(['users.id', 'users.name', 'users.nim'])
-            ->map(fn($u) => [
+            ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'nim' => $u->nim,
-                'hadir' => Presensi::where('user_id', $u->id)
-                    ->whereHas('sesi.kegiatan', fn($q) => $q->where('team_id', $team->id))
-                    ->count(),
+                'hadir' => $hadirPerUser[$u->id] ?? 0,
             ])
             ->sortByDesc('hadir')
             ->take(10)
             ->values();
 
+        // Artikel Terbaru
+        $artikelTerbaru = Artikel::where('team_id', $team->id)
+            ->with('penulis:id,name')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'judul', 'slug', 'ringkasan', 'gambar_sampul', 'status', 'ditulis_oleh', 'diterbitkan_pada'])
+            ->map(fn (Artikel $a) => [
+                'id' => $a->id,
+                'judul' => $a->judul,
+                'slug' => $a->slug,
+                'ringkasan' => $a->ringkasan,
+                'gambar_sampul' => $a->gambar_sampul,
+                'status' => $a->status,
+                'penulis' => $a->penulis ? ['id' => $a->penulis->id, 'name' => $a->penulis->name] : null,
+                'diterbitkan_pada' => $a->diterbitkan_pada?->toIso8601String(),
+            ]);
+
+        // Wishes Pending Moderasi
+        $wishesPending = Wish::where('team_id', $team->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'nama_pengirim', 'pesan', 'jumlah_laporan', 'created_at']);
+        // nama_tampil & waktu_relatif auto-appended by model
+
+        // Struktur Organisasi Preview
+        $strukturOrganisasi = DivisiOrganisasi::where('team_id', $team->id)
+            ->withCount('pengurus as jumlah_pengurus')
+            ->orderBy('urutan_tampil')
+            ->limit(5)
+            ->get(['id', 'nama_divisi', 'deskripsi'])
+            ->map(fn (DivisiOrganisasi $d) => [
+                'id' => $d->id,
+                'nama_divisi' => $d->nama_divisi,
+                'deskripsi' => $d->deskripsi,
+                'jumlah_pengurus' => $d->jumlah_pengurus ?? 0,
+            ]);
+
         return [
             'stats' => [
                 'totalKegiatan' => $totalKegiatan,
                 'totalAnggota' => $totalAnggota,
-                'totalSesiSelesai' => $totalSesiSelesai,
+                'totalPresensi' => $totalPresensi,
+                'kegiatanAktif' => $kegiatanAktif,
+                'totalArtikel' => Artikel::where('team_id', $team->id)->count(),
+                'wishesPending' => Wish::where('team_id', $team->id)->where('status', 'pending')->count(),
+                'totalDivisi' => DivisiOrganisasi::where('team_id', $team->id)->count(),
             ],
             'kegiatanMendatang' => $kegiatanMendatang,
+            'kegiatanTerbaru' => $kegiatanTerbaru,
             'rekapKehadiran' => $rekapKehadiran,
+            'artikelTerbaru' => $artikelTerbaru,
+            'wishesPending' => $wishesPending,
+            'strukturOrganisasi' => $strukturOrganisasi,
         ];
     }
 
     private function anggotaProps(User $user, Team $team): array
     {
         $totalKehadiran = Presensi::where('user_id', $user->id)
-            ->whereHas('sesi.kegiatan', fn($q) => $q->where('team_id', $team->id))
+            ->whereHas('sesi.kegiatan', fn ($q) => $q->where('team_id', $team->id))
             ->count();
 
         $rsvpAktif = $user->rsvp()
-            ->whereHas('kegiatan', fn($q) => $q->where('team_id', $team->id))
+            ->whereHas('kegiatan', fn ($q) => $q->where('team_id', $team->id))
             ->where('status', 'terdaftar')
             ->count();
 
         $kegiatanMendatang = Sesi::with([
-            'kegiatan.rsvp' => fn($q) => $q->where('user_id', $user->id),
+            'kegiatan.rsvp' => fn ($q) => $q->where('user_id', $user->id),
         ])
-            ->whereHas('kegiatan', fn($q) => $q->where('team_id', $team->id))
+            ->whereHas('kegiatan', fn ($q) => $q->where('team_id', $team->id))
             ->whereDate('tanggal', '>=', now())
-            ->whereDate('tanggal', '<=', now()->addDays(30))
+            ->whereDate('tanggal', '<=', now()->addDays(60))
             // Filter yang salah dihapus total ­— tampilkan SEMUA tipe kegiatan
             ->orderBy('tanggal')
             ->orderBy('waktu_mulai')
@@ -132,15 +209,53 @@ class DashboardController extends Controller
 
         // Aktivitas terbaru: presensi + RSVP milik user di team ini
         $aktivitasTerbaru = Presensi::where('user_id', $user->id)
-            ->whereHas('sesi.kegiatan', fn($q) => $q->where('team_id', $team->id))
+            ->whereHas('sesi.kegiatan', fn ($q) => $q->where('team_id', $team->id))
             ->with('sesi.kegiatan:id,nama')
             ->orderByDesc('waktu_isi')
             ->limit(5)
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'tipe' => 'presensi',
                 'kegiatanNama' => $p->sesi->kegiatan->nama,
                 'waktu' => $p->waktu_isi?->toIso8601String(),
+            ]);
+
+        // Artikel Terbaru
+        $artikelTerbaru = Artikel::where('team_id', $team->id)
+            ->with('penulis:id,name')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'judul', 'slug', 'ringkasan', 'gambar_sampul', 'status', 'ditulis_oleh', 'diterbitkan_pada'])
+            ->map(fn (Artikel $a) => [
+                'id' => $a->id,
+                'judul' => $a->judul,
+                'slug' => $a->slug,
+                'ringkasan' => $a->ringkasan,
+                'gambar_sampul' => $a->gambar_sampul,
+                'status' => $a->status,
+                'penulis' => $a->penulis ? ['id' => $a->penulis->id, 'name' => $a->penulis->name] : null,
+                'diterbitkan_pada' => $a->diterbitkan_pada?->toIso8601String(),
+            ]);
+
+        // Wishes Pending Moderasi
+        $wishesPending = Wish::where('team_id', $team->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'nama_pengirim', 'pesan', 'jumlah_laporan', 'created_at']);
+        // nama_tampil & waktu_relatif auto-appended by model
+
+        // Struktur Organisasi Preview
+        $strukturOrganisasi = DivisiOrganisasi::where('team_id', $team->id)
+            ->withCount('pengurus as jumlah_pengurus')
+            ->orderBy('urutan_tampil')
+            ->limit(5)
+            ->get(['id', 'nama_divisi', 'deskripsi'])
+            ->map(fn (DivisiOrganisasi $d) => [
+                'id' => $d->id,
+                'nama_divisi' => $d->nama_divisi,
+                'deskripsi' => $d->deskripsi,
+                'jumlah_pengurus' => $d->jumlah_pengurus ?? 0,
             ]);
 
         return [

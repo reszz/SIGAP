@@ -16,7 +16,7 @@ trait RedirectsToCurrentTeam
         URL::defaults(['current_team' => $team->slug]);
 
         // Arahkan ke dashboard sesuai role, abaikan $redirect bawaan Fortify
-        $rolePath = $user?->isPengurus() ? 'pengurus' : 'anggota';
+        $rolePath = $user?->isPengurus() || $user?->isPembina() ? 'pengurus' : 'anggota';
 
         return "/{$team->slug}/{$rolePath}/dashboard";
     }

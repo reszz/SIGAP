@@ -7,13 +7,17 @@ use App\Models\Kegiatan;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DokumentasiController extends Controller
 {
     /**
      * POST /{team}/pengurus/kegiatan/{kegiatan}/dokumentasi
+     *
+     * Otorisasi per tipe (SRS §3.10):
+     * - foto    → dokumentasi.upload-foto   (Div PDD, Pengurus, Ketua)
+     * - notulen → dokumentasi.upload-notulen (Sekretaris, Pengurus, Ketua)
      */
     public function store(Request $request, string $currentTeam, Kegiatan $kegiatan): RedirectResponse
     {
@@ -48,6 +52,13 @@ class DokumentasiController extends Controller
             ],
         ]);
 
+        // Cek otorisasi berdasarkan tipe file
+        $ability = $validated['tipe'] === 'foto'
+            ? 'dokumentasi.upload-foto'
+            : 'dokumentasi.upload-notulen';
+
+        $this->authorize($ability, $kegiatan);
+
         $path = $validated['file']->store(
             "dokumentasi/{$team->id}/{$kegiatan->id}",
             'local'
@@ -75,31 +86,19 @@ class DokumentasiController extends Controller
 
         $dokumentasi->load('kegiatan');
 
-        abort_if(
-            $dokumentasi->kegiatan->team_id !== $team->id,
-            403
-        );
-
-        abort_if(
-            ! $request->user()->belongsToTeam($team),
-            403
-        );
-
-        abort_if(
-            ! Storage::disk('local')->exists($dokumentasi->file_path),
-            404
-        );
+        abort_if($dokumentasi->kegiatan->team_id !== $team->id, 403);
+        abort_if(! $request->user()->belongsToTeam($team), 403);
+        abort_if(! Storage::disk('local')->exists($dokumentasi->file_path), 404);
 
         return response()->file(
             Storage::disk('local')->path($dokumentasi->file_path),
-            [
-                'Content-Disposition' => 'inline',
-            ]
+            ['Content-Disposition' => 'inline']
         );
     }
 
     /**
      * DELETE /{team}/pengurus/dokumentasi/{dokumentasi}
+     * Hapus boleh dilakukan oleh siapapun yang boleh upload tipe tersebut.
      */
     public function destroy(Request $request, string $currentTeam, Dokumentasi $dokumentasi): RedirectResponse
     {
@@ -107,9 +106,13 @@ class DokumentasiController extends Controller
         $dokumentasi->load('kegiatan');
         abort_if($dokumentasi->kegiatan->team_id !== $team->id, 403);
 
-        // Hapus file fisik dulu
-        Storage::disk('local')->delete($dokumentasi->file_path);
+        $ability = $dokumentasi->tipe === 'foto'
+            ? 'dokumentasi.upload-foto'
+            : 'dokumentasi.upload-notulen';
 
+        $this->authorize($ability, $dokumentasi->kegiatan);
+
+        Storage::disk('local')->delete($dokumentasi->file_path);
         $dokumentasi->delete();
 
         return redirect()->back()->with('success', 'Dokumentasi berhasil dihapus.');

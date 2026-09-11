@@ -59,8 +59,8 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
                     data-test="team-switcher-trigger"
                     className={
                         inHeader
-                            ? 'h-8 gap-1 px-2'
-                            : 'w-full justify-start px-2 has-[>svg]:px-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                            ? 'h-8 gap-1 px-2 rounded-md'
+                            : 'w-full justify-start px-2 rounded-md has-[>svg]:px-2 text-[#1E2430] hover:bg-[#F0F2F5] dark:text-[#E6ECF5] dark:hover:bg-[#21293A] data-[state=open]:bg-[#4A5FD1]/10 data-[state=open]:text-[#4A5FD1]'
                     }
                 >
                     <Users

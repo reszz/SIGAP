@@ -13,11 +13,37 @@ use App\Services\KegiatanAuthService;
 class KegiatanPolicy
 {
     /**
+     * Pengurus dan Super Admin dapat membuat Kegiatan baru.
+     */
+    public function create(User $user): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
+        return $user->isPengurus();
+    }
+
+    /**
      * Pengurus dapat kelola SEMUA Kegiatan dalam Team-nya.
      * Ketua Pelaksana dapat kelola HANYA Kegiatan yang dia pimpin.
      */
     public function manage(User $user, Kegiatan $kegiatan): bool
     {
         return KegiatanAuthService::isPengurusAtauKetua($user, $kegiatan);
+    }
+
+    public function update(User $user, Kegiatan $kegiatan): bool
+    {
+        return $this->manage($user, $kegiatan);
+    }
+
+    public function delete(User $user, Kegiatan $kegiatan): bool
+    {
+        return $this->manage($user, $kegiatan);
     }
 }

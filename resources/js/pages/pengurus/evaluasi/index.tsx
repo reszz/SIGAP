@@ -1,6 +1,10 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronDown, MessageSquare, Star } from 'lucide-react';
+import {kegiatanBreadcrumbs} from '@/lib/breadcrumbs';
 import { index as evaluasiIndex } from '@/routes/evaluasi';
+import { index as panitiaIndex } from '@/routes/panitia';
+import ReadOnlyBanner from '@/components/read-only-banner';
+import AccessRestrictionCard from '@/components/access-restriction-card';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,12 +23,13 @@ type Props = {
     evaluasi: EvaluasiItem[];
     rataRating: number | null;
     jumlahEvaluasi: number;
+    isReadOnly?: boolean;
 };
 
 // ─── Star Rating Display ──────────────────────────────────────────────────────
 
 function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'lg' }) {
-    const starSize = size === 'lg' ? 'size-6' : 'size-4';
+    const starSize = size === 'lg' ? 'size-5' : 'size-3.5';
     return (
         <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((n) => (
@@ -32,8 +37,8 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'lg
                     key={n}
                     className={`${starSize} ${
                         n <= rating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'fill-neutral-200 text-neutral-200 dark:fill-neutral-700 dark:text-neutral-700'
+                            ? 'fill-[#B8862E] text-[#B8862E]'
+                            : 'fill-transparent text-[#727C8E]/30 dark:text-[#8C97A8]/30'
                     }`}
                 />
             ))}
@@ -49,6 +54,7 @@ export default function EvaluasiIndex({
     evaluasi,
     rataRating,
     jumlahEvaluasi,
+    isReadOnly,
 }: Props) {
     const { url } = usePage();
     const teamSlug = url.split('/')[1];
@@ -64,13 +70,20 @@ export default function EvaluasiIndex({
             <Head title="Evaluasi & Ulasan" />
 
             <div className="flex h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                {isReadOnly && (
+                    <ReadOnlyBanner
+                        roleName="Pembina"
+                        message="Anda sedang dalam mode pemantauan evaluasi acara. Hasil ulasan, rating, dan masukan peserta ditampilkan untuk keperluan monitoring kegiatan."
+                    />
+                )}
+
                 {/* ─── Header ─── */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="font-display text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-100">
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
                             Evaluasi & Ulasan
                         </h1>
-                        <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                        <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
                             Analisis kepuasan peserta dan evaluasi per kegiatan
                         </p>
                     </div>
@@ -79,8 +92,10 @@ export default function EvaluasiIndex({
                         <div className="relative min-w-56">
                             <select
                                 value={selectedKegiatanId ?? ''}
-                                onChange={(e) => pilihKegiatan(Number(e.target.value))}
-                                className="w-full appearance-none rounded-2xl border border-neutral-200/70 bg-white py-2.5 pl-4 pr-10 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+                                onChange={(e) =>
+                                    pilihKegiatan(Number(e.target.value))
+                                }
+                                className="w-full appearance-none rounded-lg border border-[rgba(30,36,48,0.12)] bg-white py-2 pr-9 pl-3.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                             >
                                 <option value="" disabled>
                                     Pilih Kegiatan
@@ -91,47 +106,50 @@ export default function EvaluasiIndex({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown className="pointer-events-none absolute right-3 top-3 size-4 text-neutral-400" />
+                            <ChevronDown className="pointer-events-none absolute top-2.5 right-3 size-4 text-[#727C8E]" />
                         </div>
                     )}
                 </div>
 
                 {/* ─── Belum pilih kegiatan ─── */}
-                {!selectedKegiatan ? (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <MessageSquare className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            {kegiatanList.length === 0
-                                ? 'Kamu belum memiliki akses evaluasi untuk kegiatan manapun.'
-                                : 'Pilih kegiatan di atas untuk melihat ringkasan evaluasi.'}
+                {kegiatanList.length === 0 ? (
+                    <AccessRestrictionCard actionType="evaluasi" />
+                ) : !selectedKegiatan ? (
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <MessageSquare className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                        <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
+                            Pilih kegiatan di atas untuk melihat ringkasan evaluasi.
                         </p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-6">
                         {/* ─── Summary Card ─── */}
-                        <div className="flex flex-wrap items-center gap-8 rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-sm sm:p-8 dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="flex flex-wrap items-center gap-8 rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 shadow-sm sm:p-8 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
                             {rataRating != null ? (
                                 <>
                                     <div className="flex items-center gap-4">
-                                        <p className="font-display text-4xl font-extrabold text-neutral-900 sm:text-5xl dark:text-neutral-100">
+                                        <p className="font-mono-sigap font-display text-4xl font-semibold text-[#B8862E] sm:text-5xl dark:text-[#D4A142]">
                                             {rataRating.toFixed(1)}
                                         </p>
                                         <div className="flex flex-col gap-1">
-                                            <StarRating rating={Math.round(rataRating)} size="lg" />
-                                            <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                                            <StarRating
+                                                rating={Math.round(rataRating)}
+                                                size="lg"
+                                            />
+                                            <p className="text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
                                                 Skor Rata-Rata
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="hidden h-12 w-px bg-neutral-200 sm:block dark:bg-neutral-700" />
+                                    <div className="hidden h-12 w-px bg-[rgba(30,36,48,0.08)] sm:block dark:bg-[rgba(255,255,255,0.08)]" />
                                 </>
                             ) : null}
 
                             <div className="flex flex-col">
-                                <p className="font-display text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                <p className="font-mono-sigap font-display text-3xl font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                     {jumlahEvaluasi}
                                 </p>
-                                <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                                <p className="text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
                                     Ulasan Diterima
                                 </p>
                             </div>
@@ -139,10 +157,11 @@ export default function EvaluasiIndex({
 
                         {/* ─── List Komentar ─── */}
                         {evaluasi.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-16 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                                <MessageSquare className="mb-3 size-10 text-neutral-300 dark:text-neutral-700" />
-                                <p className="text-xs font-semibold text-neutral-400">
-                                    Belum ada evaluasi atau ulasan untuk kegiatan ini.
+                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-16 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                                <MessageSquare className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                                <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
+                                    Belum ada evaluasi atau ulasan untuk
+                                    kegiatan ini.
                                 </p>
                             </div>
                         ) : (
@@ -160,35 +179,41 @@ export default function EvaluasiIndex({
                                     return (
                                         <div
                                             key={e.id}
-                                            className="flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
+                                            className="flex flex-col justify-between rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]"
                                         >
                                             <div>
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="flex size-8 items-center justify-center rounded-xl bg-amber-50 text-xs font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                                                        <div className="flex size-7.5 items-center justify-center rounded-full bg-[#B8862E]/12 text-xs font-semibold text-[#B8862E] dark:bg-[#B8862E]/20 dark:text-[#D4A142]">
                                                             {initials}
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                                            <p className="text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                                                 {e.user}
                                                             </p>
                                                             <div className="mt-0.5">
-                                                                <StarRating rating={e.rating} />
+                                                                <StarRating
+                                                                    rating={
+                                                                        e.rating
+                                                                    }
+                                                                />
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                                                    <span className="font-mono-sigap rounded-md bg-[#B8862E]/12 px-2 py-0.5 text-[11px] font-semibold text-[#B8862E] dark:bg-[#B8862E]/20 dark:text-[#D4A142]">
                                                         {e.rating} / 5
                                                     </span>
                                                 </div>
 
                                                 {e.komentar ? (
-                                                    <p className="mt-3.5 text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
-                                                        "{e.komentar}"
+                                                    <p className="mt-3 text-xs leading-relaxed text-[#2E3542] dark:text-[#E6ECF5]">
+                                                        &ldquo;{e.komentar}
+                                                        &rdquo;
                                                     </p>
                                                 ) : (
-                                                    <p className="mt-3.5 text-xs italic text-neutral-400">
-                                                        Tidak ada komentar tambahan.
+                                                    <p className="mt-3 text-xs text-[#727C8E]/70 italic dark:text-[#8C97A8]/70">
+                                                        Tidak ada komentar
+                                                        tambahan.
                                                     </p>
                                                 )}
                                             </div>
@@ -203,3 +228,26 @@ export default function EvaluasiIndex({
         </>
     );
 }
+
+EvaluasiIndex.layout = (
+    page: Props & {
+        currentTeam?: { slug: string } | null;
+    },
+) => {
+    const teamSlug = page.currentTeam?.slug ?? '';
+    const selectedKegiatan = page.kegiatanList.find(
+        (k) => k.id === page.selectedKegiatanId,
+    );
+
+    return {
+        breadcrumbs: kegiatanBreadcrumbs(
+            'Kegiatan',
+            teamSlug ? evaluasiIndex.url(teamSlug) : '/kegiatan',
+            {
+                title: 'Evaluasi & Ulasan',
+                href: teamSlug ? panitiaIndex.url(teamSlug) : '/evaluasi',
+            },
+            selectedKegiatan && { title: selectedKegiatan.nama, href: '' },
+        ),
+    };
+};

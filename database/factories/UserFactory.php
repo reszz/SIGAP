@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\GlobalRole;
 use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
@@ -77,6 +78,34 @@ class UserFactory extends Factory
             'two_factor_secret' => encrypt('secret'),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
+        ]);
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => GlobalRole::SuperAdmin,
+        ]);
+    }
+
+    public function pembina(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => GlobalRole::Pembina,
+        ]);
+    }
+
+    public function pengurus(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => GlobalRole::Pengurus,
+        ]);
+    }
+
+    public function anggota(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => GlobalRole::Anggota,
         ]);
     }
 }

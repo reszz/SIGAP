@@ -1,9 +1,21 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { ChevronDown, ClipboardList, Plus, Trash2, Calendar, Clock, MapPin } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    ChevronDown,
+    ClipboardList,
+    Plus,
+    Trash2,
+    Calendar,
+    Clock,
+    MapPin,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { index as rundownIndex } from '@/routes/rundown';
 import { upsert } from '@/routes/sesi/rundown';
 import { confirmDelete, showSuccess, Toast } from '@/lib/sweetalert';
+import { kegiatanBreadcrumbs} from '@/lib/breadcrumbs';
+import { index as panitiaIndex } from '@/routes/panitia';
+import ReadOnlyBanner from '@/components/read-only-banner';
+import AccessRestrictionCard from '@/components/access-restriction-card';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +47,8 @@ type Props = {
     selectedKegiatanId: number | null;
     selectedSesiId: number | null;
     rundown: RundownItem[];
+    canManage?: boolean;
+    isReadOnly?: boolean;
 };
 
 type RundownRow = { waktu: string; uraian_acara: string };
@@ -44,17 +58,23 @@ export default function RundownIndex({
     selectedKegiatanId,
     selectedSesiId,
     rundown,
+    canManage = true,
+    isReadOnly = false,
 }: Props) {
     const { url } = usePage();
     const teamSlug = url.split('/')[1];
 
-    const selectedKegiatan = kegiatanList.find((k) => k.id === selectedKegiatanId) ?? null;
+    const selectedKegiatan =
+        kegiatanList.find((k) => k.id === selectedKegiatanId) ?? null;
     const sesiList: SesiOption[] = selectedKegiatan?.sesi ?? [];
     const selectedSesi = sesiList.find((s) => s.id === selectedSesiId) ?? null;
 
     const [rows, setRows] = useState<RundownRow[]>(() =>
         rundown.length > 0
-            ? rundown.map((r) => ({ waktu: r.waktu, uraian_acara: r.uraian_acara }))
+            ? rundown.map((r) => ({
+                  waktu: r.waktu,
+                  uraian_acara: r.uraian_acara,
+              }))
             : [],
     );
     const [saving, setSaving] = useState(false);
@@ -62,17 +82,28 @@ export default function RundownIndex({
     useEffect(() => {
         setRows(
             rundown.length > 0
-                ? rundown.map((r) => ({ waktu: r.waktu, uraian_acara: r.uraian_acara }))
+                ? rundown.map((r) => ({
+                      waktu: r.waktu,
+                      uraian_acara: r.uraian_acara,
+                  }))
                 : [],
         );
     }, [selectedSesiId, rundown.length, JSON.stringify(rundown)]);
 
     function pilihKegiatan(id: number) {
-        router.get(rundownIndex.url(teamSlug), { kegiatan_id: id }, { preserveState: false });
+        router.get(
+            rundownIndex.url(teamSlug),
+            { kegiatan_id: id },
+            { preserveState: false },
+        );
     }
 
     function pilihSesi(id: number) {
-        router.get(rundownIndex.url(teamSlug), { kegiatan_id: selectedKegiatanId, sesi_id: id }, { preserveState: false });
+        router.get(
+            rundownIndex.url(teamSlug),
+            { kegiatan_id: selectedKegiatanId, sesi_id: id },
+            { preserveState: false },
+        );
     }
 
     function tambahBaris() {
@@ -85,8 +116,13 @@ export default function RundownIndex({
 
     async function hapusBaris(index: number) {
         const row = rows[index];
-        const label = row?.uraian_acara ? `"${row.uraian_acara}"` : `Baris #${index + 1}`;
-        const confirmed = await confirmDelete('Item Rundown', `Hapus ${label} dari susunan rundown?`);
+        const label = row?.uraian_acara
+            ? `"${row.uraian_acara}"`
+            : `Baris #${index + 1}`;
+        const confirmed = await confirmDelete(
+            'Item Rundown',
+            `Hapus ${label} dari susunan rundown?`,
+        );
         if (!confirmed) return;
         setRows((prev) => prev.filter((_, i) => i !== index));
         Toast.fire({
@@ -95,8 +131,14 @@ export default function RundownIndex({
         });
     }
 
-    function updateBaris(index: number, field: keyof RundownRow, value: string) {
-        setRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
+    function updateBaris(
+        index: number,
+        field: keyof RundownRow,
+        value: string,
+    ) {
+        setRows((prev) =>
+            prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)),
+        );
     }
 
     function simpan() {
@@ -108,11 +150,17 @@ export default function RundownIndex({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    showSuccess('Rundown Tersimpan!', 'Susunan jadwal rundown acara berhasil disimpan ke sistem.');
+                    showSuccess(
+                        'Rundown Tersimpan!',
+                        'Susunan jadwal rundown acara berhasil disimpan ke sistem.',
+                    );
                     router.get(
                         rundownIndex.url(teamSlug),
-                        { kegiatan_id: selectedKegiatanId, sesi_id: selectedSesiId },
-                        { preserveState: false, preserveScroll: true }
+                        {
+                            kegiatan_id: selectedKegiatanId,
+                            sesi_id: selectedSesiId,
+                        },
+                        { preserveState: false, preserveScroll: true },
                     );
                 },
                 onFinish: () => setSaving(false),
@@ -125,25 +173,28 @@ export default function RundownIndex({
             <Head title="Rundown Acara" />
 
             <div className="flex h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+
                 {/* ─── Header ─── */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="font-display text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-100">
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
                             Rundown Acara
                         </h1>
-                        <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                        <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
                             Atur susunan jadwal kegiatan secara presisi per sesi
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
                         {/* Selector Kegiatan */}
                         {kegiatanList.length > 0 && (
-                            <div className="relative min-w-48">
+                            <div className="relative w-full min-w-0 sm:w-56">
                                 <select
                                     value={selectedKegiatanId ?? ''}
-                                    onChange={(e) => pilihKegiatan(Number(e.target.value))}
-                                    className="w-full appearance-none rounded-2xl border border-neutral-200/70 bg-white py-2.5 pl-4 pr-10 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+                                    onChange={(e) =>
+                                        pilihKegiatan(Number(e.target.value))
+                                    }
+                                    className="w-full appearance-none rounded-lg border border-[rgba(30,36,48,0.12)] bg-white py-2 pr-9 pl-3.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                 >
                                     <option value="" disabled>
                                         Pilih Kegiatan
@@ -154,172 +205,261 @@ export default function RundownIndex({
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="pointer-events-none absolute right-3 top-3 size-4 text-neutral-400" />
+                                <ChevronDown className="pointer-events-none absolute top-2.5 right-3 size-4 text-[#727C8E]" />
                             </div>
                         )}
 
                         {/* Selector Sesi */}
                         {selectedKegiatan && sesiList.length > 0 && (
-                            <div className="relative min-w-56">
+                            <div className="relative w-full min-w-0 sm:w-64">
                                 <select
                                     value={selectedSesiId ?? ''}
-                                    onChange={(e) => pilihSesi(Number(e.target.value))}
-                                    className="w-full appearance-none rounded-2xl border border-neutral-200/70 bg-white py-2.5 pl-4 pr-10 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+                                    onChange={(e) =>
+                                        pilihSesi(Number(e.target.value))
+                                    }
+                                    className="w-full appearance-none rounded-lg border border-[rgba(30,36,48,0.12)] bg-white py-2 pr-9 pl-3.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                 >
                                     <option value="" disabled>
                                         Pilih Sesi
                                     </option>
                                     {sesiList.map((s) => (
                                         <option key={s.id} value={s.id}>
-                                            {s.tanggal} • {s.waktu_mulai.slice(0, 5)}–{s.waktu_selesai.slice(0, 5)}
+                                            {s.tanggal} •{' '}
+                                            {s.waktu_mulai.slice(0, 5)}–
+                                            {s.waktu_selesai.slice(0, 5)}
                                             {s.lokasi ? ` (${s.lokasi})` : ''}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="pointer-events-none absolute right-3 top-3 size-4 text-neutral-400" />
+                                <ChevronDown className="pointer-events-none absolute top-2.5 right-3 size-4 text-[#727C8E]" />
                             </div>
                         )}
                     </div>
                 </div>
 
+                {/* ─── Mode Pemantauan Banner ─── */}
+                {isReadOnly && (
+                    <ReadOnlyBanner
+                        roleName="Pembina"
+                        message="Anda sedang dalam mode pemantauan. Anda dapat memantau susunan rundown kegiatan secara real-time."
+                    />
+                )}
+
                 {/* ─── Empty States ─── */}
                 {kegiatanList.length === 0 && (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <ClipboardList className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            Kamu tidak memiliki akses rundown untuk kegiatan manapun.
-                        </p>
-                    </div>
+                    <AccessRestrictionCard actionType="rundown" />
                 )}
 
                 {kegiatanList.length > 0 && !selectedKegiatan && (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <ClipboardList className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            Pilih kegiatan di atas untuk mengelola susunan rundown.
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <ClipboardList className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                        <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
+                            Pilih kegiatan di atas untuk mengelola susunan
+                            rundown.
                         </p>
                     </div>
                 )}
 
                 {selectedKegiatan && sesiList.length === 0 && (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <Calendar className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <Calendar className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                        <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
                             Kegiatan ini belum memiliki jadwal sesi.
                         </p>
                     </div>
                 )}
 
                 {selectedKegiatan && sesiList.length > 0 && !selectedSesi && (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <Clock className="mb-4 size-12 text-neutral-300 dark:text-neutral-700" />
-                        <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            Pilih sesi kegiatan di atas untuk mulai menyusun rundown.
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <Clock className="mb-3 size-10 text-[#727C8E]/40 dark:text-[#8C97A8]/40" />
+                        <p className="text-xs font-medium text-[#727C8E] dark:text-[#8C97A8]">
+                            Pilih sesi kegiatan di atas untuk mulai menyusun
+                            rundown.
                         </p>
                     </div>
                 )}
 
                 {/* ─── Editor Rundown ─── */}
                 {selectedSesi && (
-                    <div className="overflow-hidden rounded-3xl border border-neutral-200/70 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="overflow-hidden rounded-lg border border-[rgba(30,36,48,0.08)] bg-white shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
                         {/* Sesi info header */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/30">
-                            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="size-4 text-[#4F46E5]" />
+                        <div className="flex flex-col justify-between gap-3 border-b border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/50 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/30">
+                            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-[#1E2430] sm:gap-4 dark:text-[#E6ECF5]">
+                                <span className="font-mono-sigap flex items-center gap-1.5">
+                                    <Calendar className="size-3.5 text-[#4A5FD1] dark:text-[#8FA0FA]" />
                                     {selectedSesi.tanggal}
                                 </span>
-                                <span className="flex items-center gap-1.5">
-                                    <Clock className="size-4 text-[#4F46E5]" />
-                                    <span className="font-mono-sigap">
-                                        {selectedSesi.waktu_mulai.slice(0, 5)} – {selectedSesi.waktu_selesai.slice(0, 5)}
+                                <span className="font-mono-sigap flex items-center gap-1.5">
+                                    <Clock className="size-3.5 text-[#4A5FD1] dark:text-[#8FA0FA]" />
+                                    <span>
+                                        {selectedSesi.waktu_mulai.slice(0, 5)} –{' '}
+                                        {selectedSesi.waktu_selesai.slice(0, 5)}{' '}
+                                        WIB
                                     </span>
                                 </span>
                                 {selectedSesi.lokasi && (
                                     <span className="flex items-center gap-1.5">
-                                        <MapPin className="size-4 text-[#4F46E5]" />
+                                        <MapPin className="size-3.5 text-[#4A5FD1] dark:text-[#8FA0FA]" />
                                         {selectedSesi.lokasi}
                                     </span>
                                 )}
                             </div>
-                            <span className="rounded-full bg-[#EEF2FF] px-3 py-1 text-[11px] font-bold text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
+                            <span className="font-mono-sigap self-start rounded-md bg-[#4A5FD1]/12 px-2.5 py-0.5 text-[11px] font-medium text-[#4A5FD1] sm:self-auto dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                 {rows.length} Item Agenda
                             </span>
                         </div>
 
-                        <div className="p-6">
-                            {/* Header kolom */}
-                            <div className="mb-3 grid grid-cols-[2.5rem_10rem_1fr_2.5rem] gap-3 px-1 text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
+                        <div className="p-4 sm:p-5">
+                            {/* Header kolom Desktop */}
+                            <div className="mb-2 hidden gap-2 px-1 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase sm:grid sm:grid-cols-[2.5rem_7.5rem_1fr_2.5rem] dark:text-[#8C97A8]">
                                 <span>#</span>
                                 <span>Waktu</span>
                                 <span>Uraian Acara</span>
-                                <span />
+                                <span className="text-right">Aksi</span>
                             </div>
 
                             {rows.length === 0 && (
-                                <p className="mb-4 text-xs italic text-neutral-400">
-                                    Belum ada baris rundown. Klik "Tambah Baris" di bawah untuk memulai.
+                                <p className="mb-4 text-xs text-[#727C8E]/70 italic dark:text-[#8C97A8]/70">
+                                    Belum ada baris rundown. Klik &ldquo;Tambah
+                                    Baris Agenda&rdquo; di bawah untuk memulai.
                                 </p>
                             )}
 
-                            <div className="flex flex-col gap-2.5">
+                            {/* Responsive Rows Container */}
+                            <div className="flex flex-col gap-2.5 sm:gap-2">
                                 {rows.map((row, i) => (
                                     <div
                                         key={i}
-                                        className="grid grid-cols-[2.5rem_10rem_1fr_2.5rem] items-center gap-3"
+                                        className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/50 p-3 sm:grid sm:grid-cols-[2.5rem_7.5rem_1fr_2.5rem] sm:items-center sm:gap-2 sm:border-0 sm:bg-transparent sm:p-0 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/30"
                                     >
-                                        <span className="text-center font-mono-sigap text-xs font-bold text-neutral-400">
-                                            {i + 1}
-                                        </span>
-                                        <input
-                                            type="time"
-                                            value={row.waktu}
-                                            onChange={(e) => updateBaris(i, 'waktu', e.target.value)}
-                                            className="font-mono-sigap rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold text-neutral-800 focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={row.uraian_acara}
-                                            onChange={(e) => updateBaris(i, 'uraian_acara', e.target.value)}
-                                            placeholder="Tulis detail uraian acara..."
-                                            className="rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs text-neutral-800 focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => hapusBaris(i)}
-                                            title="Hapus baris"
-                                            className="flex items-center justify-center rounded-xl p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30"
-                                        >
-                                            <Trash2 className="size-4" />
-                                        </button>
+                                        {/* Mobile Top Row: Index + Time + Delete Button (In Desktop it becomes regular inline grid cells) */}
+                                        <div className="flex items-center justify-between gap-2 sm:contents">
+                                            <div className="flex items-center gap-2 sm:contents">
+                                                <span className="font-mono-sigap flex size-6 shrink-0 items-center justify-center rounded-full bg-[#4A5FD1]/10 text-xs font-semibold text-[#4A5FD1] sm:size-auto sm:bg-transparent sm:text-[#727C8E] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA] sm:dark:text-[#8C97A8]">
+                                                    {i + 1}
+                                                </span>
+                                                <input
+                                                    type="time"
+                                                    value={row.waktu}
+                                                    disabled={!canManage}
+                                                    onChange={(e) =>
+                                                        updateBaris(
+                                                            i,
+                                                            'waktu',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="font-mono-sigap w-32 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] disabled:opacity-60 sm:w-full dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
+                                                />
+                                            </div>
+
+                                            {canManage && (
+                                                <div className="sm:hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => hapusBaris(i)}
+                                                        title="Hapus baris"
+                                                        className="flex items-center justify-center rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#C4514A]/10 hover:text-[#C4514A]"
+                                                    >
+                                                        <Trash2 className="size-3.5" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Uraian Acara input */}
+                                        <div className="mt-2 min-w-0 sm:mt-0">
+                                            <input
+                                                type="text"
+                                                value={row.uraian_acara}
+                                                disabled={!canManage}
+                                                onChange={(e) =>
+                                                    updateBaris(
+                                                        i,
+                                                        'uraian_acara',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Tulis detail uraian acara..."
+                                                className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] disabled:opacity-60 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
+                                            />
+                                        </div>
+
+                                        {/* Desktop Delete button */}
+                                        {canManage && (
+                                            <div className="hidden sm:flex sm:justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => hapusBaris(i)}
+                                                    title="Hapus baris"
+                                                    className="flex items-center justify-center rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#C4514A]/10 hover:text-[#C4514A]"
+                                                >
+                                                    <Trash2 className="size-3.5" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
 
                             {/* Tombol Tambah Baris */}
-                            <button
-                                type="button"
-                                onClick={tambahBaris}
-                                className="mt-5 flex items-center gap-1.5 rounded-2xl border border-dashed border-neutral-200 px-4 py-2 text-xs font-bold text-neutral-600 transition hover:border-[#4F46E5] hover:text-[#4F46E5] dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-[#4F46E5] dark:hover:text-[#818CF8]"
-                            >
-                                <Plus className="size-4" />
-                                Tambah Baris Agenda
-                            </button>
+                            {canManage && (
+                                <button
+                                    type="button"
+                                    onClick={tambahBaris}
+                                    className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-[rgba(30,36,48,0.12)] px-3.5 py-2 text-xs font-semibold text-[#727C8E] transition hover:border-[#4A5FD1] hover:text-[#4A5FD1] sm:w-auto sm:justify-start sm:py-1.5 dark:border-[rgba(255,255,255,0.12)] dark:text-[#8C97A8] dark:hover:border-[#4A5FD1] dark:hover:text-[#8FA0FA]"
+                                >
+                                    <Plus className="size-3.5" />
+                                    <span>Tambah Baris Agenda</span>
+                                </button>
+                            )}
                         </div>
 
-                        <div className="flex justify-end border-t border-neutral-100 px-6 py-4 dark:border-neutral-800">
-                            <button
-                                type="button"
-                                onClick={simpan}
-                                disabled={saving}
-                                className="rounded-2xl bg-[#4F46E5] px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-[#4F46E5]/25 transition hover:bg-[#4338CA] disabled:opacity-50"
-                            >
-                                {saving ? 'Menyimpan...' : 'Simpan Rundown'}
-                            </button>
-                        </div>
+                        {canManage && (
+                            <div className="flex flex-col items-center justify-end border-t border-[rgba(30,36,48,0.08)] p-4 sm:flex-row sm:px-5 sm:py-3.5 dark:border-[rgba(255,255,255,0.08)]">
+                                <button
+                                    type="button"
+                                    onClick={simpan}
+                                    disabled={saving}
+                                    className="w-full rounded-lg bg-[#4A5FD1] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3B4DB8] disabled:opacity-50 sm:w-auto sm:py-2"
+                                >
+                                    {saving ? 'Menyimpan...' : 'Simpan Rundown'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
         </>
     );
 }
+
+RundownIndex.layout = (
+    page: Props & {
+        currentTeam?: { slug: string } | null;
+    },
+) => {
+    const teamSlug = page.currentTeam?.slug ?? '';
+    const selectedKegiatan = page.kegiatanList.find(
+        (k) => k.id === page.selectedKegiatanId,
+    );
+    const selectedSesi = selectedKegiatan?.sesi.find(
+        (s) => s.id === page.selectedSesiId,
+    );
+
+    return {
+        breadcrumbs: kegiatanBreadcrumbs(
+            'Kegiatan',
+            teamSlug ? rundownIndex.url(teamSlug) : '/kegiatan',
+            {
+                title: 'Rundown Acara',
+                href: teamSlug ? panitiaIndex.url(teamSlug) : '/rundown',
+            },
+            selectedKegiatan && { title: selectedKegiatan.nama, href: '' },
+            selectedSesi && {
+                title: `${selectedSesi.tanggal} • ${selectedSesi.waktu_mulai.slice(0, 5)}`,
+                href: '',
+            },
+        ),
+    };
+};

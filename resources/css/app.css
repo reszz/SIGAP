@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -7,16 +8,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Design Token Extensions ───────────────────────────────────────────────── */
 @theme {
+    /* Typography */
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-display:
+        'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:
+        'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        'Liberation Mono', 'Courier New', monospace;
 
+    /* Radius: 8px for cards/buttons, 6px for badge/inputs */
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
 
+    /* Mapped color tokens */
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
@@ -59,85 +68,547 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* SIGAP Design System Color Tokens (design.md) */
+    --color-sigap-base: #f6f7f9;
+    --color-sigap-surface: #ffffff;
+    --color-sigap-ink: #1e2430;
+    --color-sigap-ink-soft: #2e3542;
+    --color-sigap-slate: #727c8e;
+    --color-sigap-blue: #4a5fd1;
+    --color-sigap-teal: #2e9e82;
+    --color-sigap-amber: #b8862e;
+    --color-sigap-red: #c4514a;
 }
 
+/* ── Light Mode Tokens (Cool-Neutral Palette) ───────────────────────────────── */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    /* Base & Surface */
+    --background: #f6f7f9; /* Base: very light cool bluish-gray */
+    --foreground: #1e2430; /* Ink: charcoal-navy */
+    --card: #ffffff; /* Surface: cards, panels, modals */
+    --card-foreground: #1e2430;
+    --popover: #ffffff;
+    --popover-foreground: #1e2430;
+
+    /* Primary Accent — Sigap Blue */
+    --primary: #4a5fd1;
+    --primary-foreground: #ffffff;
+
+    /* Secondary & Muted */
+    --secondary: #f0f2f5;
+    --secondary-foreground: #1e2430;
+
+    --muted: #f0f2f5;
+    --muted-foreground: #727c8e; /* Slate */
+
+    /* Accent */
+    --accent: #eef1fa;
+    --accent-foreground: #4a5fd1;
+
+    /* Destructive / Overdue / Urgent */
+    --destructive: #c4514a; /* Merah pudar */
+    --destructive-foreground: #ffffff;
+
+    /* Border & Input (Border, not heavy shadow) */
+    --border: rgba(30, 36, 48, 0.08);
+    --input: rgba(30, 36, 48, 0.12);
+    --ring: #4a5fd1;
+
+    /* Radius: 8px base (cards, buttons), 6px for badge/inputs */
+    --radius: 0.5rem;
+
+    /* Charts / Statuses */
+    --chart-1: #4a5fd1;
+    --chart-2: #2e9e82;
+    --chart-3: #b8862e;
+    --chart-4: #c4514a;
+    --chart-5: #727c8e;
+
+    /* Sidebar */
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1e2430;
+    --sidebar-primary: #4a5fd1;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #eef1fa;
+    --sidebar-accent-foreground: #4a5fd1;
+    --sidebar-border: rgba(30, 36, 48, 0.08);
+    --sidebar-ring: #4a5fd1;
 }
 
+/* ── Dark Mode Tokens (Deep Cool Slate Canvas) ──────────────────────────────── */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    --background: #0e121a; /* Deep Charcoal Navy */
+    --foreground: #e6ecf5;
+    --card: #181e2b; /* Surface Panel */
+    --card-foreground: #e6ecf5;
+    --popover: #181e2b;
+    --popover-foreground: #e6ecf5;
+
+    --primary: #586de6; /* Accessible Sigap Blue on Dark */
+    --primary-foreground: #ffffff;
+
+    --secondary: #21293a;
+    --secondary-foreground: #e6ecf5;
+
+    --muted: #21293a;
+    --muted-foreground: #8c97a8;
+
+    --accent: #242e46;
+    --accent-foreground: #8fa0fa;
+
+    --destructive: #d9615a;
+    --destructive-foreground: #ffffff;
+
+    --border: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.12);
+    --ring: #586de6;
+
+    --radius: 0.5rem;
+
+    --chart-1: #586de6;
+    --chart-2: #34b394;
+    --chart-3: #d4a142;
+    --chart-4: #d9615a;
+    --chart-5: #8c97a8;
+
+    --sidebar: #181e2b;
+    --sidebar-foreground: #e6ecf5;
+    --sidebar-primary: #586de6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #242e46;
+    --sidebar-accent-foreground: #8fa0fa;
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-ring: #586de6;
 }
 
 @layer base {
     * {
-        @apply border-border;
+        @apply border-border outline-ring/50;
+    }
+    html {
+        background: var(--background);
+        scroll-behavior: smooth;
+    }
+    body {
+        @apply bg-background font-sans text-[#2E3542] antialiased dark:text-[#E6ECF5];
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        min-width: 320px;
+        text-rendering: optimizeLegibility;
+    }
+    ::selection {
+        background: color-mix(in srgb, var(--primary) 20%, transparent);
+        color: var(--primary);
+    }
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--background);
+    }
+    ::-webkit-scrollbar-thumb {
+        border: 3px solid var(--background);
+        border-radius: 999px;
+        background: color-mix(
+            in srgb,
+            var(--muted-foreground) 35%,
+            transparent
+        );
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: color-mix(in srgb, var(--primary) 60%, transparent);
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply text-[#1E2430] dark:text-[#E6ECF5];
+    }
+}
+
+/* ── Shared page atmosphere ───────────────────────────────────────────────── */
+.sigap-app-content,
+.sigap-public-shell,
+.sigap-auth-shell {
+    position: relative;
+    isolation: isolate;
+}
+
+.sigap-app-content::before,
+.sigap-public-shell::before,
+.sigap-auth-shell::before {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    content: '';
+    opacity: 0.34;
+    background-image: radial-gradient(
+        color-mix(in srgb, var(--primary) 14%, transparent) 0.7px,
+        transparent 0.7px
+    );
+    background-size: 22px 22px;
+    mask-image: linear-gradient(to bottom, black, transparent 72%);
+}
+
+.sigap-app-content > :not(header),
+.sigap-public-shell main > *,
+.sigap-auth-shell > * {
+    animation: sigapPageEnter 260ms ease-out both;
+}
+
+@keyframes sigapPageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
     }
 
-    body {
-        @apply bg-background text-foreground;
+    .sigap-app-content > :not(header),
+    .sigap-public-shell main > *,
+    .sigap-auth-shell > * {
+        animation: none;
+    }
+}
+
+/* ── Custom Utilities for Font Classes ─────────────────────────────────────── */
+.font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+}
+
+.font-mono-sigap {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Signature Element: Sigap Pulse Animation ──────────────────────────────── */
+@keyframes sigapPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
+
+.sigap-pulse-dot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+}
+
+.sigap-pulse-core {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: #4a5fd1;
+}
+
+.sigap-pulse-ring {
+    position: absolute;
+    inset: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: #4a5fd1;
+    animation: sigapPulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sigap-pulse-ring {
+        animation: none !important;
+        display: none !important;
+    }
+}
+
+/* ── Focus Style ───────────────────────────────────────────────────────────── */
+:focus-visible {
+    outline: 2px solid #4a5fd1;
+    outline-offset: 2px;
+}
+
+/* ── SweetAlert2 Theme Customization (design.md) ────────────────────────────── */
+.sigap-swal-container {
+    backdrop-filter: blur(6px) !important;
+    background-color: rgba(30, 36, 48, 0.4) !important;
+    z-index: 99999 !important;
+}
+
+.sigap-swal-popup {
+    max-width: 380px !important;
+    width: 90% !important;
+    border-radius: 0.5rem !important; /* 8px */
+    border: 1px solid rgba(30, 36, 48, 0.1) !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(30, 36, 48, 0.12) !important;
+    padding: 1.75rem 1.5rem 1.5rem !important;
+    font-family: var(--font-sans) !important;
+}
+
+.dark .sigap-swal-popup {
+    background-color: #181e2b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e6ecf5 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sigap-swal-actions {
+    gap: 0.5rem !important;
+    margin-top: 1.25rem !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.sigap-btn-primary {
+    min-width: 7.25rem !important;
+    background-color: #4a5fd1 !important;
+    color: #ffffff !important;
+    border-radius: 0.5rem !important; /* 8px */
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease-out !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+}
+
+.sigap-btn-primary:hover {
+    background-color: #3b4db8 !important;
+}
+
+.sigap-btn-danger {
+    min-width: 7.25rem !important;
+    background-color: #c4514a !important;
+    color: #ffffff !important;
+    border-radius: 0.5rem !important; /* 8px */
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease-out !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+}
+
+.sigap-btn-danger:hover {
+    background-color: #af4039 !important;
+}
+
+.sigap-btn-cancel {
+    min-width: 7.25rem !important;
+    background-color: #ffffff !important;
+    color: #727c8e !important;
+    border: 1px solid rgba(30, 36, 48, 0.12) !important;
+    border-radius: 0.5rem !important; /* 8px */
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease-out !important;
+    cursor: pointer !important;
+}
+
+.sigap-btn-cancel:hover {
+    background-color: #f6f7f9 !important;
+    color: #1e2430 !important;
+}
+
+.dark .sigap-btn-cancel {
+    background-color: #21293a !important;
+    color: #8c97a8 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .sigap-btn-cancel:hover {
+    background-color: #2b344a !important;
+    color: #e6ecf5 !important;
+}
+
+/* Custom Icon Badges */
+.swal-icon-badge {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem auto;
+    transition: transform 0.2s ease;
+}
+
+.swal-icon-success {
+    background-color: rgba(46, 158, 130, 0.12);
+    color: #2e9e82;
+    border: 1px solid rgba(46, 158, 130, 0.25);
+}
+
+.dark .swal-icon-success {
+    background-color: rgba(46, 158, 130, 0.2);
+    border-color: rgba(46, 158, 130, 0.35);
+}
+
+.swal-icon-error,
+.swal-icon-delete {
+    background-color: rgba(196, 81, 74, 0.12);
+    color: #c4514a;
+    border: 1px solid rgba(196, 81, 74, 0.25);
+}
+
+.dark .swal-icon-error,
+.dark .swal-icon-delete {
+    background-color: rgba(196, 81, 74, 0.2);
+    border-color: rgba(196, 81, 74, 0.35);
+}
+
+.swal-icon-warning {
+    background-color: rgba(184, 134, 46, 0.12);
+    color: #b8862e;
+    border: 1px solid rgba(184, 134, 46, 0.25);
+}
+
+.dark .swal-icon-warning {
+    background-color: rgba(184, 134, 46, 0.2);
+    border-color: rgba(184, 134, 46, 0.35);
+}
+
+.swal-icon-info {
+    background-color: rgba(74, 95, 209, 0.12);
+    color: #4a5fd1;
+    border: 1px solid rgba(74, 95, 209, 0.25);
+}
+
+.dark .swal-icon-info {
+    background-color: rgba(74, 95, 209, 0.2);
+    border-color: rgba(74, 95, 209, 0.35);
+}
+
+.swal-icon-role {
+    background-color: rgba(184, 134, 46, 0.12);
+    color: #b8862e;
+    border: 1px solid rgba(184, 134, 46, 0.25);
+}
+
+.dark .swal-icon-role {
+    background-color: rgba(184, 134, 46, 0.2);
+    border-color: rgba(184, 134, 46, 0.35);
+}
+
+.sigap-btn-amber {
+    background-color: #b8862e !important;
+    color: #ffffff !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease-out !important;
+    cursor: pointer !important;
+    border: none !important;
+}
+
+.sigap-btn-amber:hover {
+    background-color: #a37424 !important;
+}
+
+/* Hide modal icons because modal content uses SIGAP icon badges. */
+.sigap-swal-popup .swal2-icon {
+    display: none !important;
+}
+
+/* Toast Styles */
+.sigap-toast-popup {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.625rem !important;
+    min-width: 18rem !important;
+    max-width: min(24rem, calc(100vw - 2rem)) !important;
+    background: #ffffff !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid rgba(30, 36, 48, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(30, 36, 48, 0.08) !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    color: #1e2430 !important;
+}
+
+.sigap-toast-icon {
+    display: inline-flex !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    margin: 0 !important;
+    border-width: 2px !important;
+    flex-shrink: 0 !important;
+}
+
+.sigap-toast-title {
+    margin: 0 !important;
+    text-align: left !important;
+    line-height: 1.35 !important;
+}
+
+.sigap-toast-show {
+    animation: sigapToastIn 180ms ease-out both !important;
+}
+
+.sigap-toast-hide {
+    animation: sigapToastOut 140ms ease-in both !important;
+}
+
+@keyframes sigapToastIn {
+    from {
+        opacity: 0;
+        transform: translate3d(12px, -4px, 0) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+@keyframes sigapToastOut {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(8px, -2px, 0) scale(0.98);
+    }
+}
+
+.dark .sigap-toast-popup {
+    background: #181e2b !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e6ecf5 !important;
+}
+
+.sigap-toast-progress {
+    background: #4a5fd1 !important;
+    border-radius: 9999px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sigap-toast-show,
+    .sigap-toast-hide {
+        animation: none !important;
     }
 }

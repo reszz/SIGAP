@@ -23,7 +23,17 @@ class PanitiaIndexController extends Controller
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         $user = $request->user();
 
-        $semuaKegiatan = Kegiatan::where('team_id', $team->id)
+        $periodeId = $user->current_periode_id;
+
+        $kegiatanQuery = Kegiatan::where('team_id', $team->id);
+        if ($periodeId) {
+            $kegiatanQuery->where(function ($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId)
+                    ->orWhereNull('periode_id');
+            });
+        }
+
+        $semuaKegiatan = $kegiatanQuery
             ->with([
                 'kepanitiaan.user',
                 'tugas.pic',
@@ -31,9 +41,13 @@ class PanitiaIndexController extends Controller
             ->orderByDesc('created_at')
             ->get(['id', 'nama', 'warna', 'team_id']);
 
-        // Tampilkan kegiatan yang user bisa akses (kepanitiaan.manage ATAU punya jabatan divisi)
+        // Tampilkan kegiatan yang user bisa akses:
+        // Super Admin & Pembina dapat melihat semua kegiatan (Pembina sebagai read-only)
+        // Pengurus / Panitia melihat kegiatan yang mereka pimpin atau memiliki jabatan divisi
         $kegiatanList = $semuaKegiatan->filter(
-            fn ($k) => Gate::forUser($user)->allows('kepanitiaan.manage', $k)
+            fn ($k) => $user->isSuperAdmin()
+                || $user->isPembina()
+                || Gate::forUser($user)->allows('kepanitiaan.manage', $k)
                 || ! empty(KegiatanAuthService::jabatanDiAll($user, $k->id))
         )->values();
 
@@ -42,12 +56,17 @@ class PanitiaIndexController extends Controller
             ? $semuaKegiatan->firstWhere('id', $selectedKegiatanId)
             : null;
 
-        // Flags otorisasi untuk kegiatan yang dipilih
-        $canManageKepanitiaan = $selectedKegiatan
+        $currentPeriode = $user->currentPeriode;
+        $isPeriodeEditable = ! $currentPeriode || $currentPeriode->is_aktif || $currentPeriode->isLatest();
+        $isReadOnly = $user->isPembina() || (! $isPeriodeEditable && ! $user->isSuperAdmin());
+
+        // Flags otorisasi untuk kegiatan yang dipilih (Pembina & periode arsip adalah strictly read-only)
+        $canManageKepanitiaan = ! $isReadOnly
+            && $selectedKegiatan
             && Gate::forUser($user)->allows('kepanitiaan.manage', $selectedKegiatan);
 
         // Jabatan user di kegiatan yang dipilih (untuk batasi aksi tugas)
-        $jabatanUser = $selectedKegiatanId
+        $jabatanUser = ($selectedKegiatanId && ! $isReadOnly)
             ? array_map(fn ($j) => $j->value, KegiatanAuthService::jabatanDiAll($user, $selectedKegiatanId))
             : [];
 
@@ -57,10 +76,16 @@ class PanitiaIndexController extends Controller
             ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
             ->values();
 
+        // Divisi yang dikoordinatori oleh user yang sedang login
+        $koordinatorDivisi = ($selectedKegiatanId && ! $isReadOnly)
+            ? KegiatanAuthService::divisiKoordinatorUser($user, $selectedKegiatanId)
+            : [];
+
         $kepanitiaan = $selectedKegiatan?->kepanitiaan->map(fn ($k) => [
             'id' => $k->id,
             'jabatan' => $k->jabatan->value ?? $k->jabatan,
             'user_id' => $k->user_id,
+            'is_koordinator' => (bool) $k->is_koordinator,
             'user' => $k->user ? ['id' => $k->user->id, 'name' => $k->user->name] : null,
         ])->values() ?? collect();
 
@@ -87,6 +112,8 @@ class PanitiaIndexController extends Controller
             'anggotaTeam' => $anggotaTeam,
             'canManageKepanitiaan' => $canManageKepanitiaan,
             'jabatanUser' => $jabatanUser,
+            'koordinatorDivisi' => $koordinatorDivisi,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 }

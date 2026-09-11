@@ -1,6 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
-    FileText,
     Inbox,
     Send,
     Plus,
@@ -9,15 +8,18 @@ import {
     X,
     Download,
     ChevronDown,
-    FileUp,
     Mail,
     MailOpen,
     Check,
     Calendar,
-    Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
+import {kegiatanBreadcrumbs} from '@/lib/breadcrumbs';
 import { confirmDelete, showSuccess, Toast } from '@/lib/sweetalert';
+import { index as suratIndex } from '@/routes/surat';
+import { index as panitiaIndex } from '@/routes/panitia';
+import ReadOnlyBanner from '@/components/read-only-banner';
+import AccessRestrictionCard from '@/components/access-restriction-card';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,23 +46,24 @@ type Props = {
     filterTipe: 'masuk' | 'keluar' | null;
     canManageMasuk: boolean;
     canManageKeluar: boolean;
+    isReadOnly?: boolean;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function InputError({ message }: { message?: string }) {
     if (!message) return null;
-    return <p className="mt-1 text-xs text-red-500 font-medium">{message}</p>;
+    return <p className="mt-1 text-xs text-[#C4514A] font-medium">{message}</p>;
 }
 
 function TipeBadge({ tipe }: { tipe: 'masuk' | 'keluar' }) {
     return tipe === 'masuk' ? (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
-            <Inbox className="size-3.5" /> Masuk
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-[#4A5FD1]/12 px-2 py-0.5 text-xs font-semibold text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
+            <Inbox className="size-3" /> Masuk
         </span>
     ) : (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <Send className="size-3.5" /> Keluar
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-[#2E9E82]/12 px-2 py-0.5 text-xs font-semibold text-[#2E9E82] dark:bg-[#2E9E82]/20 dark:text-[#34B394]">
+            <Send className="size-3" /> Keluar
         </span>
     );
 }
@@ -127,7 +130,6 @@ function SuratModal({
         };
 
         if (editSurat) {
-            // PATCH dengan _method spoofing via forceFormData
             post(url + '?_method=PATCH', opts);
         } else {
             post(url, opts);
@@ -135,25 +137,25 @@ function SuratModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/45 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900 max-h-[90vh] overflow-y-auto">
-                <div className="mb-5 flex items-center justify-between border-b border-neutral-100 pb-4 dark:border-neutral-800">
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-2xl bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="w-full max-w-lg rounded-lg border border-[rgba(30,36,48,0.12)] bg-white p-6 shadow-xl dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] max-h-[90vh] overflow-y-auto">
+                <div className="mb-5 flex items-center justify-between border-b border-[rgba(30,36,48,0.08)] pb-3.5 dark:border-[rgba(255,255,255,0.08)]">
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex size-8 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                             <Mail className="size-4" />
                         </div>
                         <div>
-                            <h2 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-100">
+                            <h2 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                 {isEditing ? 'Edit Arsip Surat' : 'Tambah Arsip Surat'}
                             </h2>
-                            <p className="text-xs text-neutral-400">
+                            <p className="text-xs text-[#727C8E] dark:text-[#8C97A8]">
                                 {isEditing ? 'Perbarui rincian arsip surat' : 'Catat surat masuk atau surat keluar baru'}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="rounded-xl p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                        className="rounded-md p-1.5 text-[#727C8E] hover:bg-[#F6F7F9] hover:text-[#1E2430] dark:hover:bg-[#21293A] dark:hover:text-[#E6ECF5]"
                     >
                         <X className="size-4" />
                     </button>
@@ -162,8 +164,8 @@ function SuratModal({
                 <form onSubmit={submit} className="flex flex-col gap-4">
                     {/* Tipe Surat */}
                     <div>
-                        <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                            Tipe Surat <span className="text-red-500">*</span>
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
+                            Tipe Surat <span className="text-[#C4514A]">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             {canManageMasuk && (
@@ -171,10 +173,10 @@ function SuratModal({
                                     type="button"
                                     onClick={() => !isEditing && setData('tipe', 'masuk')}
                                     disabled={isEditing}
-                                    className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${
+                                    className={`flex items-center justify-center gap-2 rounded-md border p-2.5 text-xs font-semibold transition-all ${
                                         data.tipe === 'masuk'
-                                            ? 'border-blue-500 bg-blue-50/70 text-blue-700 ring-2 ring-blue-500/20 dark:border-blue-600 dark:bg-blue-950/40 dark:text-blue-300'
-                                            : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                            ? 'border-[#4A5FD1] bg-[#4A5FD1]/10 text-[#4A5FD1] dark:border-[#8FA0FA] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]'
+                                            : 'border-[rgba(30,36,48,0.12)] bg-white text-[#727C8E] hover:border-[rgba(30,36,48,0.2)] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#8C97A8]'
                                     }`}
                                 >
                                     <Inbox className="size-4" />
@@ -186,10 +188,10 @@ function SuratModal({
                                     type="button"
                                     onClick={() => !isEditing && setData('tipe', 'keluar')}
                                     disabled={isEditing}
-                                    className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${
+                                    className={`flex items-center justify-center gap-2 rounded-md border p-2.5 text-xs font-semibold transition-all ${
                                         data.tipe === 'keluar'
-                                            ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-2 ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                            : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                            ? 'border-[#2E9E82] bg-[#2E9E82]/10 text-[#2E9E82] dark:border-[#34B394] dark:bg-[#2E9E82]/20 dark:text-[#34B394]'
+                                            : 'border-[rgba(30,36,48,0.12)] bg-white text-[#727C8E] hover:border-[rgba(30,36,48,0.2)] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#8C97A8]'
                                     }`}
                                 >
                                     <Send className="size-4" />
@@ -212,35 +214,35 @@ function SuratModal({
                         },
                     ].map(({ key, label, placeholder }) => (
                         <div key={key}>
-                            <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                {label} <span className="text-red-500">*</span>
+                            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
+                                {label} <span className="text-[#C4514A]">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={data[key as keyof typeof data] as string}
                                 onChange={(e) => setData(key as keyof typeof data, e.target.value)}
                                 placeholder={placeholder}
-                                className="w-full rounded-2xl border border-neutral-200/80 bg-white px-3.5 py-2.5 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-2 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                             />
                             <InputError message={errors[key as keyof typeof errors]} />
                         </div>
                     ))}
 
                     <div>
-                        <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                            Tanggal Surat <span className="text-red-500">*</span>
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
+                            Tanggal Surat <span className="text-[#C4514A]">*</span>
                         </label>
                         <input
                             type="date"
                             value={data.tanggal_surat}
                             onChange={(e) => setData('tanggal_surat', e.target.value)}
-                            className="font-mono-sigap w-full rounded-2xl border border-neutral-200/80 bg-white px-3.5 py-2.5 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                            className="font-mono-sigap w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-2 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                         />
                         <InputError message={errors.tanggal_surat} />
                     </div>
 
                     <div>
-                        <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
                             Keterangan / Catatan Tambahan
                         </label>
                         <textarea
@@ -248,39 +250,39 @@ function SuratModal({
                             onChange={(e) => setData('keterangan', e.target.value)}
                             rows={3}
                             placeholder="Catatan tambahan, disposisi, atau keterangan nomor arsip..."
-                            className="w-full rounded-2xl border border-neutral-200/80 bg-white px-3.5 py-2.5 text-xs text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 resize-none"
+                            className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-2 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5] resize-none"
                         />
                         <InputError message={errors.keterangan} />
                     </div>
 
                     {/* Upload berkas */}
                     <div>
-                        <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
                             Unggah Dokumen Berkas (PDF, DOC — Max 20MB)
                         </label>
-                        <div className="flex items-center gap-2 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-2 dark:border-neutral-700 dark:bg-neutral-800/40">
+                        <div className="flex items-center gap-2 rounded-md border border-[rgba(30,36,48,0.12)] bg-[#F6F7F9]/50 p-2 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#21293A]/40">
                             <input
                                 type="file"
                                 accept=".pdf,.doc,.docx,.odt"
                                 onChange={(e) => setData('file', e.target.files?.[0] ?? null)}
-                                className="w-full text-xs text-neutral-600 dark:text-neutral-300 file:mr-3 file:rounded-xl file:border-0 file:bg-[#EEF2FF] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-[#4F46E5] hover:file:bg-[#E0E7FF] dark:file:bg-[#4F46E5]/20 dark:file:text-[#818CF8]"
+                                className="w-full text-xs text-[#727C8E] dark:text-[#8C97A8] file:mr-3 file:rounded-md file:border-0 file:bg-[#4A5FD1]/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#4A5FD1] hover:file:bg-[#4A5FD1]/20 dark:file:bg-[#4A5FD1]/20 dark:file:text-[#8FA0FA]"
                             />
                         </div>
                         <InputError message={errors.file} />
                     </div>
 
-                    <div className="mt-2 flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <div className="mt-2 flex items-center justify-end gap-2 pt-2 border-t border-[rgba(30,36,48,0.08)] dark:border-[rgba(255,255,255,0.08)]">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-2xl border border-neutral-200 bg-white px-4 py-2 text-xs font-bold text-neutral-700 shadow-2xs transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                            className="rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#727C8E] hover:bg-[#F6F7F9] dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B] dark:text-[#8C97A8]"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="flex items-center gap-1.5 rounded-2xl bg-[#4F46E5] px-5 py-2 text-xs font-bold text-white shadow-sm shadow-[#4F46E5]/25 transition hover:bg-[#4338CA] disabled:opacity-50"
+                            className="flex items-center gap-1.5 rounded-md bg-[#4A5FD1] px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-[#3B4DB8] disabled:opacity-50"
                         >
                             <Check className="size-3.5" />
                             {processing ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Simpan Surat'}
@@ -301,6 +303,7 @@ export default function SuratIndex({
     filterTipe,
     canManageMasuk,
     canManageKeluar,
+    isReadOnly,
 }: Props) {
     const { url } = usePage();
     const teamSlug = url.split('/')[1];
@@ -345,7 +348,7 @@ export default function SuratIndex({
         });
     }
 
-    const canManageAny = canManageMasuk || canManageKeluar;
+    const canManageAny = !isReadOnly && (canManageMasuk || canManageKeluar);
 
     const countMasuk = surat.filter((s) => s.tipe === 'masuk').length;
     const countKeluar = surat.filter((s) => s.tipe === 'keluar').length;
@@ -354,31 +357,32 @@ export default function SuratIndex({
         <>
             <Head title="Surat Menyurat" />
 
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
+            <div className="flex h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                {isReadOnly && (
+                    <ReadOnlyBanner
+                        roleName="Pembina"
+                        message="Anda sedang dalam mode pemantauan surat menyurat. Arsip surat masuk dan keluar ditampilkan untuk keperluan monitoring tanpa akses perubahan."
+                    />
+                )}
+
                 {/* ── Header & Kegiatan Selector ── */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <div className="mb-1 flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF2FF] px-2.5 py-0.5 text-[11px] font-bold text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
-                                <FileText className="size-3" />
-                                <span>Administrasi Dokumen</span>
-                            </span>
-                        </div>
-                        <h1 className="font-display text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-100">
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
                             Surat Menyurat
                         </h1>
-                        <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                        <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
                             Kelola arsip surat masuk dan surat keluar resmi kegiatan
                         </p>
                     </div>
 
                     {/* Selector Kegiatan */}
                     {kegiatanList.length > 0 && (
-                        <div className="relative">
+                        <div className="relative min-w-56">
                             <select
                                 value={selectedKegiatanId ?? ''}
                                 onChange={(e) => pilihKegiatan(Number(e.target.value))}
-                                className="appearance-none rounded-2xl border border-neutral-200/80 bg-white py-2.5 pl-4 pr-10 text-xs font-bold text-neutral-800 shadow-2xs focus:border-[#4F46E5] focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                                className="w-full appearance-none rounded-lg border border-[rgba(30,36,48,0.12)] bg-white py-2 pl-3.5 pr-9 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                             >
                                 <option value="" disabled>
                                     Pilih Kegiatan
@@ -389,24 +393,24 @@ export default function SuratIndex({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown className="pointer-events-none absolute right-3 top-3 size-4 text-neutral-400" />
+                            <ChevronDown className="pointer-events-none absolute right-3 top-2.5 size-4 text-[#727C8E]" />
                         </div>
                     )}
                 </div>
 
                 {/* ── Belum Pilih Kegiatan Empty State ── */}
-                {!selectedKegiatan && (
-                    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white py-20 text-center dark:border-neutral-800 dark:bg-neutral-900">
-                        <div className="flex size-14 items-center justify-center rounded-3xl bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8] mb-3">
-                            <Mail className="size-7" />
+                {kegiatanList.length === 0 ? (
+                    <AccessRestrictionCard actionType="surat" />
+                ) : !selectedKegiatan && (
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(30,36,48,0.12)] bg-white py-20 text-center dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B]">
+                        <div className="flex size-12 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA] mb-3">
+                            <Mail className="size-6" />
                         </div>
-                        <h3 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-100">
+                        <h3 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                             Pilih Kegiatan Terlebih Dahulu
                         </h3>
-                        <p className="max-w-xs text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            {kegiatanList.length === 0
-                                ? 'Kamu belum memiliki akses ke surat menyurat kegiatan manapun.'
-                                : 'Pilih kegiatan di pojok kanan atas untuk melihat dan mengarsipkan surat.'}
+                        <p className="max-w-xs text-xs text-[#727C8E] dark:text-[#8C97A8] mt-1">
+                            Pilih kegiatan di pojok kanan atas untuk melihat dan mengarsipkan surat.
                         </p>
                     </div>
                 )}
@@ -414,44 +418,44 @@ export default function SuratIndex({
                 {selectedKegiatan && (
                     <>
                         {/* ── 3 Summary KPI Tiles ── */}
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <div className="flex items-center gap-3.5 rounded-3xl border border-neutral-200/70 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
-                                <div className="flex size-11 items-center justify-center rounded-2xl bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818CF8]">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="flex items-center gap-3.5 rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                                <div className="flex size-10 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                     <Mail className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
                                         Total Surat
                                     </p>
-                                    <p className="font-display text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                                    <p className="font-display font-mono-sigap text-2xl font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                         {surat.length}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3.5 rounded-3xl border border-neutral-200/70 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
-                                <div className="flex size-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                            <div className="flex items-center gap-3.5 rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                                <div className="flex size-10 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                     <Inbox className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
                                         Surat Masuk
                                     </p>
-                                    <p className="font-display text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                    <p className="font-display font-mono-sigap text-2xl font-semibold text-[#4A5FD1] dark:text-[#8FA0FA]">
                                         {countMasuk}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3.5 rounded-3xl border border-neutral-200/70 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
-                                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                            <div className="flex items-center gap-3.5 rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                                <div className="flex size-10 items-center justify-center rounded-md bg-[#2E9E82]/12 text-[#2E9E82] dark:bg-[#2E9E82]/20 dark:text-[#34B394]">
                                     <Send className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
                                         Surat Keluar
                                     </p>
-                                    <p className="font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                                    <p className="font-display font-mono-sigap text-2xl font-semibold text-[#2E9E82] dark:text-[#34B394]">
                                         {countKeluar}
                                     </p>
                                 </div>
@@ -459,11 +463,11 @@ export default function SuratIndex({
                         </div>
 
                         {/* ── Table & Filter Card ── */}
-                        <div className="rounded-3xl border border-neutral-200/70 bg-white shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
                             {/* Filter Tabs + Action Buttons */}
-                            <div className="flex flex-wrap items-center justify-between gap-3 p-5 border-b border-neutral-100 dark:border-neutral-800">
+                            <div className="flex flex-wrap items-center justify-between gap-3 p-5 border-b border-[rgba(30,36,48,0.08)] dark:border-[rgba(255,255,255,0.08)]">
                                 {/* Segmented Filter Tabs */}
-                                <div className="flex items-center rounded-2xl border border-neutral-200/80 bg-neutral-50/60 p-1 dark:border-neutral-700/60 dark:bg-neutral-800/40">
+                                <div className="flex items-center rounded-md border border-[rgba(30,36,48,0.12)] bg-[#F6F7F9]/60 p-1 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#21293A]/40">
                                     {[
                                         { label: 'Semua Surat', value: null },
                                         { label: `Masuk (${countMasuk})`, value: 'masuk' },
@@ -472,10 +476,10 @@ export default function SuratIndex({
                                         <button
                                             key={label}
                                             onClick={() => pilihFilter(value as 'masuk' | 'keluar' | null)}
-                                            className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                            className={`rounded-md px-3 py-1 text-xs font-semibold transition-all ${
                                                 filterTipe === value
-                                                    ? 'bg-[#4F46E5] text-white shadow-xs'
-                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
+                                                    ? 'bg-[#4A5FD1] text-white shadow-xs'
+                                                    : 'text-[#727C8E] hover:text-[#1E2430] dark:text-[#8C97A8] dark:hover:text-[#E6ECF5]'
                                             }`}
                                         >
                                             {label}
@@ -490,7 +494,7 @@ export default function SuratIndex({
                                             <button
                                                 id="btn-tambah-surat-masuk"
                                                 onClick={() => openAdd('masuk')}
-                                                className="flex items-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+                                                className="flex items-center gap-1.5 rounded-lg bg-[#4A5FD1] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#3B4DB8]"
                                             >
                                                 <Plus className="size-3.5" />
                                                 <span>Surat Masuk</span>
@@ -500,7 +504,7 @@ export default function SuratIndex({
                                             <button
                                                 id="btn-tambah-surat-keluar"
                                                 onClick={() => openAdd('keluar')}
-                                                className="flex items-center gap-1.5 rounded-2xl bg-[#10B981] px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#059669]"
+                                                className="flex items-center gap-1.5 rounded-lg bg-[#2E9E82] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#27866F]"
                                             >
                                                 <Plus className="size-3.5" />
                                                 <span>Surat Keluar</span>
@@ -513,13 +517,13 @@ export default function SuratIndex({
                             {/* Table Content */}
                             {surat.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                                    <div className="flex size-14 items-center justify-center rounded-3xl bg-neutral-100 text-neutral-400 dark:bg-neutral-800">
-                                        <MailOpen className="size-7" />
+                                    <div className="flex size-12 items-center justify-center rounded-md bg-[#F6F7F9] text-[#727C8E] dark:bg-[#21293A] dark:text-[#8C97A8]">
+                                        <MailOpen className="size-6" />
                                     </div>
-                                    <h3 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                    <h3 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                         Belum Ada Surat {filterTipe ? `(${filterTipe})` : ''}
                                     </h3>
-                                    <p className="max-w-xs text-xs text-neutral-500 dark:text-neutral-400">
+                                    <p className="max-w-xs text-xs text-[#727C8E] dark:text-[#8C97A8]">
                                         Belum ada dokumen surat yang dicatat untuk kegiatan ini.
                                     </p>
                                 </div>
@@ -527,7 +531,7 @@ export default function SuratIndex({
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
                                         <thead>
-                                            <tr className="border-b border-neutral-100 bg-neutral-50/50 text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 dark:border-neutral-800 dark:bg-neutral-800/40">
+                                            <tr className="border-b border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/60 text-[11px] font-semibold uppercase tracking-wider text-[#727C8E] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/40 dark:text-[#8C97A8]">
                                                 <th className="px-5 py-3">Tipe</th>
                                                 <th className="px-5 py-3">Nomor Surat</th>
                                                 <th className="px-5 py-3">Jenis</th>
@@ -538,56 +542,56 @@ export default function SuratIndex({
                                                 <th className="px-5 py-3 text-right">Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                                        <tbody className="divide-y divide-[rgba(30,36,48,0.06)] dark:divide-[rgba(255,255,255,0.06)]">
                                             {surat.map((s) => (
                                                 <tr
                                                     key={s.id}
-                                                    className="transition hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40"
+                                                    className="transition hover:bg-[#F6F7F9]/50 dark:hover:bg-[#21293A]/30"
                                                 >
-                                                    <td className="px-5 py-3.5">
+                                                    <td className="px-5 py-3">
                                                         <TipeBadge tipe={s.tipe} />
                                                     </td>
-                                                    <td className="font-mono-sigap px-5 py-3.5 font-bold text-neutral-800 dark:text-neutral-200">
+                                                    <td className="font-mono-sigap px-5 py-3 font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                                         {s.nomor_surat}
                                                     </td>
-                                                    <td className="px-5 py-3.5 font-medium text-neutral-700 dark:text-neutral-300">
+                                                    <td className="px-5 py-3 font-medium text-[#727C8E] dark:text-[#8C97A8]">
                                                         {s.jenis_surat}
                                                     </td>
-                                                    <td className="px-5 py-3.5 max-w-xs">
-                                                        <p className="font-bold text-neutral-900 dark:text-neutral-100 line-clamp-2">
+                                                    <td className="px-5 py-3 max-w-xs">
+                                                        <p className="font-semibold text-[#1E2430] dark:text-[#E6ECF5] line-clamp-2">
                                                             {s.perihal}
                                                         </p>
                                                         {s.keterangan && (
-                                                            <p className="mt-0.5 text-[11px] text-neutral-400 line-clamp-1">
+                                                            <p className="mt-0.5 text-[11px] text-[#727C8E] dark:text-[#8C97A8] line-clamp-1">
                                                                 {s.keterangan}
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="font-mono-sigap px-5 py-3.5 whitespace-nowrap text-neutral-600 dark:text-neutral-400">
+                                                    <td className="font-mono-sigap px-5 py-3 whitespace-nowrap text-[#727C8E] dark:text-[#8C97A8]">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Calendar className="size-3 text-neutral-400" />
+                                                            <Calendar className="size-3 text-[#727C8E]" />
                                                             <span>{s.tanggal_surat}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-5 py-3.5 font-medium text-neutral-700 dark:text-neutral-300">
+                                                    <td className="px-5 py-3 font-medium text-[#727C8E] dark:text-[#8C97A8]">
                                                         {s.pengirim_penerima}
                                                     </td>
-                                                    <td className="px-5 py-3.5">
+                                                    <td className="px-5 py-3">
                                                         {s.has_file ? (
                                                             <a
                                                                 href={s.file_url!}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-700 transition hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-[#4F46E5]/20 dark:hover:text-[#818CF8]"
+                                                                className="inline-flex items-center gap-1 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-2.5 py-1 text-xs font-semibold text-[#1E2430] transition hover:bg-[#F6F7F9] dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                                             >
-                                                                <Download className="size-3" />
+                                                                <Download className="size-3 text-[#4A5FD1]" />
                                                                 Unduh
                                                             </a>
                                                         ) : (
-                                                            <span className="text-xs text-neutral-400">—</span>
+                                                            <span className="text-xs text-[#727C8E]/60">—</span>
                                                         )}
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-right">
+                                                    <td className="px-5 py-3 text-right">
                                                         <div className="flex items-center justify-end gap-1">
                                                             {((s.tipe === 'masuk' && canManageMasuk) ||
                                                                 (s.tipe === 'keluar' && canManageKeluar)) && (
@@ -595,14 +599,14 @@ export default function SuratIndex({
                                                                     <button
                                                                         onClick={() => openEdit(s)}
                                                                         title="Edit surat"
-                                                                        className="rounded-xl p-1.5 text-neutral-400 transition hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:hover:bg-[#4F46E5]/20 dark:hover:text-[#818CF8]"
+                                                                        className="rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#4A5FD1]/10 hover:text-[#4A5FD1]"
                                                                     >
                                                                         <Pencil className="size-3.5" />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => hapusSurat(s.id)}
                                                                         title="Hapus surat"
-                                                                        className="rounded-xl p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+                                                                        className="rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#C4514A]/10 hover:text-[#C4514A]"
                                                                     >
                                                                         <Trash2 className="size-3.5" />
                                                                     </button>
@@ -638,3 +642,24 @@ export default function SuratIndex({
         </>
     );
 }
+
+SuratIndex.layout = (page: Props & {
+    currentTeam?: {slug: string} | null;
+})=> {
+    const teamSlug = page.currentTeam?.slug ?? '';
+    const selectedKegiatan = page.kegiatanList.find(
+        (k) => k.id === page.selectedKegiatanId,
+    );
+
+    return {
+        breadcrumbs: kegiatanBreadcrumbs(
+            'Kegiatan',
+            teamSlug ? suratIndex.url(teamSlug) : '/kegiatan',
+            {
+                title: 'Surat Menyurat',
+                href: teamSlug ? panitiaIndex.url(teamSlug) : '/surat',
+            },
+            selectedKegiatan && { title: selectedKegiatan.nama, href: '' },
+        ),
+    };
+};

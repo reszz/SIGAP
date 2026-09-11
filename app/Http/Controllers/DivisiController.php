@@ -6,6 +6,7 @@ use App\Enums\JabatanKepanitiaan;
 use App\Models\Kegiatan;
 use App\Models\Kepanitiaan;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,13 +33,12 @@ class DivisiController extends Controller
 
     /**
      * POST /{team}/pengurus/kegiatan/{kegiatan}/divisi
-     * Assign user ke jabatan kepanitiaan. Pakai Kepanitiaan::assign() agar
-     * constraint jabatan tunggal divalidasi oleh model (FR-28, NFR-03).
+     *
+     * Assign user ke jabatan kepanitiaan. Untuk jabatan divisi, Koordinator Divisi
+     * juga boleh menambah anggota ke divisinya sendiri (manageAnggotaDivisi).
      */
     public function store(Request $request, string $currentTeam, Kegiatan $kegiatan): RedirectResponse
     {
-        $this->authorize('kepanitiaan.manage', $kegiatan);
-
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         abort_if($kegiatan->team_id !== $team->id, 403);
 
@@ -47,13 +47,23 @@ class DivisiController extends Controller
             'jabatan' => 'required|in:ketua_pelaksana,bendahara,sekretaris,div_acara,div_humas,div_pdd,div_logistik',
         ]);
 
-        // Kepanitiaan::assign() menangani validasi jabatan tunggal (FR-28)
+        $targetUser = User::findOrFail($validated['user_id']);
+        if ($targetUser->isPembina()) {
+            return back()->withErrors(['user_id' => 'Pembina tidak dapat ditugaskan ke dalam kepanitiaan kegiatan.']);
+        }
+
+        $jabatan = JabatanKepanitiaan::from($validated['jabatan']);
+
+        // Jabatan inti: hanya Pengurus / Ketua Pelaksana
+        if ($jabatan->isTunggal()) {
+            $this->authorize('kepanitiaan.manage', $kegiatan);
+        } else {
+            // Jabatan divisi: Pengurus/Ketua ATAU Koordinator divisi yang sama
+            $this->authorize('kepanitiaan.manageAnggotaDivisi', [$kegiatan, $jabatan, null]);
+        }
+
         try {
-            Kepanitiaan::assign(
-                $kegiatan->id,
-                $validated['user_id'],
-                JabatanKepanitiaan::from($validated['jabatan'])
-            );
+            Kepanitiaan::assign($kegiatan->id, $validated['user_id'], $jabatan);
         } catch (\RuntimeException $e) {
             return back()->withErrors(['jabatan' => $e->getMessage()]);
         }
@@ -84,17 +94,54 @@ class DivisiController extends Controller
 
     /**
      * DELETE /{team}/pengurus/divisi/{kepanitiaan}
+     *
+     * Hapus anggota dari kepanitiaan. Koordinator divisi boleh hapus anggota biasa
+     * di divisinya, tapi tidak boleh hapus sesama koordinator.
      */
     public function destroy(string $currentTeam, Kepanitiaan $kepanitiaan): RedirectResponse
     {
         $kepanitiaan->load('kegiatan');
-        $this->authorize('kepanitiaan.manage', $kepanitiaan->kegiatan);
 
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         abort_if($kepanitiaan->kegiatan->team_id !== $team->id, 403);
 
+        if ($kepanitiaan->jabatan->isTunggal()) {
+            $this->authorize('kepanitiaan.manage', $kepanitiaan->kegiatan);
+        } else {
+            $this->authorize('kepanitiaan.manageAnggotaDivisi', [$kepanitiaan->kegiatan, $kepanitiaan->jabatan, $kepanitiaan]);
+        }
+
         $kepanitiaan->delete();
 
         return back()->with('success', 'Panitia berhasil dihapus.');
+    }
+
+    /**
+     * PATCH /{team}/pengurus/divisi/{kepanitiaan}/koordinator
+     *
+     * Toggle status koordinator divisi. Hanya Pengurus / Ketua Pelaksana.
+     * Menerapkan aturan singularitas: satu koordinator per (kegiatan, jabatan divisi).
+     */
+    public function toggleKoordinator(Request $request, string $currentTeam, Kepanitiaan $kepanitiaan): RedirectResponse
+    {
+        $kepanitiaan->load('kegiatan');
+        $this->authorize('kepanitiaan.setKoordinator', $kepanitiaan->kegiatan);
+
+        $team = Team::where('slug', $currentTeam)->firstOrFail();
+        abort_if($kepanitiaan->kegiatan->team_id !== $team->id, 403);
+
+        if ($kepanitiaan->jabatan->isTunggal()) {
+            return back()->withErrors(['koordinator' => 'Jabatan inti tidak dapat dijadikan koordinator divisi.']);
+        }
+
+        try {
+            $kepanitiaan->setKoordinator(! $kepanitiaan->is_koordinator);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['koordinator' => $e->getMessage()]);
+        }
+
+        $label = $kepanitiaan->is_koordinator ? 'diangkat sebagai' : 'dilepas dari';
+
+        return back()->with('success', "Anggota berhasil {$label} Koordinator Divisi.");
     }
 }

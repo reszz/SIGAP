@@ -27,6 +27,14 @@ class SuratPolicy
      */
     public function manageSurat(User $user, Kegiatan $kegiatan): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if (KegiatanAuthService::isPengurusAtauKetua($user, $kegiatan)) {
             return true;
         }

@@ -174,7 +174,7 @@ test('anggota Div Acara TIDAK bisa membuat tugas untuk Div Humas', function () {
         ->assertForbidden();
 });
 
-test('anggota Div Acara bisa membuat tugas untuk Div Acara sendiri', function () {
+test('anggota biasa Div Acara TIDAK bisa membuat tugas untuk Div Acara sendiri (harus koordinator)', function () {
     $team = Team::factory()->create();
     $divAcara = anggotaKepanitiaan($team);
     $kegiatan = kegiatanUntukTeam($team);
@@ -183,6 +183,7 @@ test('anggota Div Acara bisa membuat tugas untuk Div Acara sendiri', function ()
         'kegiatan_id' => $kegiatan->id,
         'user_id' => $divAcara->id,
         'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => false,  // anggota biasa
     ]);
 
     KegiatanAuthService::flushCache();
@@ -194,9 +195,7 @@ test('anggota Div Acara bisa membuat tugas untuk Div Acara sendiri', function ()
             'deskripsi_tugas' => 'Susun rundown',
             'prioritas' => 'tinggi',
         ])
-        ->assertRedirect();
-
-    $this->assertDatabaseHas('tugas', ['deskripsi_tugas' => 'Susun rundown']);
+        ->assertForbidden();  // anggota biasa TIDAK bisa create tugas
 });
 
 test('PIC harus anggota divisi yang sama — tolak jika bukan', function () {
@@ -404,4 +403,207 @@ test('ketua_pelaksana dengan role anggota bisa hapus anggota dari divisi', funct
         ->assertRedirect();
 
     $this->assertDatabaseMissing('kepanitiaan', ['id' => $kepanitiaan->id]);
+});
+
+// ─── Koordinator Divisi ───────────────────────────────────────────────────────
+
+test('koordinator Div Acara berhasil menambah anggota ke Div Acara', function () {
+    $team = Team::factory()->create();
+    $koordinator = anggotaKepanitiaan($team);
+    $target = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koordinator->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => true,
+    ]);
+
+    KegiatanAuthService::flushCache();
+
+    $this->actingAs($koordinator)
+        ->post(route('divisi.store', [$team->slug, $kegiatan->id]), [
+            'user_id' => $target->id,
+            'jabatan' => 'div_acara',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('kepanitiaan', [
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $target->id,
+        'jabatan' => 'div_acara',
+    ]);
+});
+
+test('koordinator Div Acara GAGAL menambah anggota ke Div Humas', function () {
+    $team = Team::factory()->create();
+    $koordinator = anggotaKepanitiaan($team);
+    $target = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koordinator->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => true,
+    ]);
+
+    KegiatanAuthService::flushCache();
+
+    $this->actingAs($koordinator)
+        ->post(route('divisi.store', [$team->slug, $kegiatan->id]), [
+            'user_id' => $target->id,
+            'jabatan' => 'div_humas',
+        ])
+        ->assertForbidden();
+});
+
+test('koordinator TIDAK bisa assign koordinator baru (toggle koordinator harus 403)', function () {
+    $team = Team::factory()->create();
+    $koordinator = anggotaKepanitiaan($team);
+    $anggota = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koordinator->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => true,
+    ]);
+
+    $targetKepanitiaan = Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $anggota->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => false,
+    ]);
+
+    KegiatanAuthService::flushCache();
+
+    $this->actingAs($koordinator)
+        ->patch(route('divisi.koordinator', [$team->slug, $targetKepanitiaan->id]))
+        ->assertForbidden();
+});
+
+test('koordinator Div Acara berhasil membuat tugas untuk Div Acara', function () {
+    $team = Team::factory()->create();
+    $koordinator = anggotaKepanitiaan($team);
+    $pic = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koordinator->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => true,
+    ]);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $pic->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+    ]);
+
+    KegiatanAuthService::flushCache();
+
+    $this->actingAs($koordinator)
+        ->post(route('tugas.store', [$team->slug, $kegiatan->id]), [
+            'jabatan' => 'div_acara',
+            'pic_user_id' => $pic->id,
+            'deskripsi_tugas' => 'Dekorasi panggung',
+            'prioritas' => 'sedang',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('tugas', ['deskripsi_tugas' => 'Dekorasi panggung']);
+});
+
+test('pengurus tetap bisa override tambah anggota ke divisi manapun', function () {
+    $team = Team::factory()->create();
+    $pengurus = pengurusKepanitiaan($team);
+    $target = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    $this->actingAs($pengurus)
+        ->post(route('divisi.store', [$team->slug, $kegiatan->id]), [
+            'user_id' => $target->id,
+            'jabatan' => 'div_pdd',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('kepanitiaan', ['jabatan' => 'div_pdd', 'user_id' => $target->id]);
+});
+
+test('pengurus tetap bisa buat tugas untuk divisi manapun', function () {
+    $team = Team::factory()->create();
+    $pengurus = pengurusKepanitiaan($team);
+    $anggota = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $anggota->id,
+        'jabatan' => JabatanKepanitiaan::DivLogistik->value,
+    ]);
+
+    $this->actingAs($pengurus)
+        ->post(route('tugas.store', [$team->slug, $kegiatan->id]), [
+            'jabatan' => 'div_logistik',
+            'pic_user_id' => $anggota->id,
+            'deskripsi_tugas' => 'Sewa sound system',
+            'prioritas' => 'tinggi',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('tugas', ['deskripsi_tugas' => 'Sewa sound system']);
+});
+
+test('singularitas koordinator: assign koordinator baru otomatis melepas yang lama', function () {
+    $team = Team::factory()->create();
+    $pengurus = pengurusKepanitiaan($team);
+    $koor1 = anggotaKepanitiaan($team);
+    $koor2 = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    $kepanitiaan1 = Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koor1->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => true,
+    ]);
+
+    $kepanitiaan2 = Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $koor2->id,
+        'jabatan' => JabatanKepanitiaan::DivAcara->value,
+        'is_koordinator' => false,
+    ]);
+
+    // Pengurus angkat koor2 jadi koordinator — harus otomatis lepas koor1
+    $this->actingAs($pengurus)
+        ->patch(route('divisi.koordinator', [$team->slug, $kepanitiaan2->id]))
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('kepanitiaan', ['id' => $kepanitiaan1->id, 'is_koordinator' => false]);
+    $this->assertDatabaseHas('kepanitiaan', ['id' => $kepanitiaan2->id, 'is_koordinator' => true]);
+});
+
+test('is_koordinator tidak boleh di-set ke jabatan inti (ketua_pelaksana)', function () {
+    $team = Team::factory()->create();
+    $pengurus = pengurusKepanitiaan($team);
+    $anggota = anggotaKepanitiaan($team);
+    $kegiatan = kegiatanUntukTeam($team);
+
+    $kepanitiaan = Kepanitiaan::factory()->create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => $anggota->id,
+        'jabatan' => JabatanKepanitiaan::KetuaPelaksana->value,
+    ]);
+
+    $this->actingAs($pengurus)
+        ->patch(route('divisi.koordinator', [$team->slug, $kepanitiaan->id]))
+        ->assertSessionHasErrors('koordinator');
+
+    $this->assertDatabaseHas('kepanitiaan', ['id' => $kepanitiaan->id, 'is_koordinator' => false]);
 });

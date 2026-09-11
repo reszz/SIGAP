@@ -25,6 +25,13 @@ class KegiatanAuthService
     private static array $cache = [];
 
     /**
+     * Cache koordinator per kombinasi (user_id, kegiatan_id).
+     *
+     * @var array<string, array<JabatanKepanitiaan>>
+     */
+    private static array $koordinatorCache = [];
+
+    /**
      * Kembalikan jabatan User di Kegiatan tertentu, atau null kalau tidak ada.
      *
      * Catatan: user bisa punya BANYAK jabatan di kegiatan yang sama
@@ -79,11 +86,69 @@ class KegiatanAuthService
     }
 
     /**
-     * Cek apakah user adalah Pengurus (Team Role) ATAU Ketua Pelaksana di Kegiatan ini.
+     * Cek apakah user adalah Koordinator Divisi tertentu di Kegiatan ini.
+     */
+    public static function isKoordinator(
+        User $user,
+        Kegiatan|int $kegiatan,
+        JabatanKepanitiaan|string $jabatan
+    ): bool {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        $kegiatanId = $kegiatan instanceof Kegiatan ? $kegiatan->id : $kegiatan;
+        $jabatanValue = $jabatan instanceof JabatanKepanitiaan ? $jabatan->value : $jabatan;
+        $cacheKey = "koor:{$user->id}:{$kegiatanId}";
+
+        if (! array_key_exists($cacheKey, self::$koordinatorCache)) {
+            self::$koordinatorCache[$cacheKey] = Kepanitiaan::where('kegiatan_id', $kegiatanId)
+                ->where('user_id', $user->id)
+                ->where('is_koordinator', true)
+                ->pluck('jabatan')
+                ->map(fn ($j) => $j instanceof JabatanKepanitiaan ? $j->value : $j)
+                ->all();
+        }
+
+        return in_array($jabatanValue, self::$koordinatorCache[$cacheKey]);
+    }
+
+    /**
+     * Kembalikan semua divisi yang dikoordinatori oleh user di Kegiatan ini.
+     *
+     * @return array<string> array of jabatan values
+     */
+    public static function divisiKoordinatorUser(User $user, Kegiatan|int $kegiatan): array
+    {
+        $kegiatanId = $kegiatan instanceof Kegiatan ? $kegiatan->id : $kegiatan;
+        $cacheKey = "koor:{$user->id}:{$kegiatanId}";
+
+        if (! array_key_exists($cacheKey, self::$koordinatorCache)) {
+            self::$koordinatorCache[$cacheKey] = Kepanitiaan::where('kegiatan_id', $kegiatanId)
+                ->where('user_id', $user->id)
+                ->where('is_koordinator', true)
+                ->pluck('jabatan')
+                ->map(fn ($j) => $j instanceof JabatanKepanitiaan ? $j->value : $j)
+                ->all();
+        }
+
+        return self::$koordinatorCache[$cacheKey];
+    }
+
+    /**
+     * Cek apakah user adalah Super Admin, Pengurus, ATAU Ketua Pelaksana di Kegiatan ini.
      * Ini adalah "akses penuh per-kegiatan" yang paling sering dibutuhkan.
      */
     public static function isPengurusAtauKetua(User $user, Kegiatan|int $kegiatan): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if ($user->isPengurus()) {
             return true;
         }
@@ -92,10 +157,27 @@ class KegiatanAuthService
     }
 
     /**
+     * Cek apakah user memiliki izin penulisan/modifikasi administratif secara umum.
+     */
+    public static function canWrite(User $user): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
+        return $user->isPengurus();
+    }
+
+    /**
      * Reset cache — berguna untuk testing agar antar-test tidak saling polusi.
      */
     public static function flushCache(): void
     {
         self::$cache = [];
+        self::$koordinatorCache = [];
     }
 }

@@ -1,9 +1,13 @@
+export type UserRole = 'super_admin' | 'pembina' | 'pengurus' | 'anggota';
+
 export type User = {
     id: number;
     name: string;
     nim: string;
     email: string;
-    role: 'pengurus' | 'anggota';
+    role: UserRole;
+    current_team_id?: number | null;
+    current_periode_id?: number | null;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;

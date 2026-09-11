@@ -11,32 +11,32 @@ export function QuotaPill({ registered, quota, className }: QuotaPillProps) {
 
     const barColor =
         pct > 90
-            ? 'bg-[#EF4444]'
+            ? 'bg-[#C4514A]'
             : pct > 75
-              ? 'bg-[#F59E0B]'
-              : 'bg-[#4F46E5]';
+              ? 'bg-[#B8862E]'
+              : 'bg-[#4A5FD1]';
 
     const textColor =
         pct > 90
-            ? 'text-[#EF4444] dark:text-[#F87171]'
+            ? 'text-[#C4514A] dark:text-[#D9615A]'
             : pct > 75
-              ? 'text-[#D97706] dark:text-[#F59E0B]'
-              : 'text-[#4F46E5] dark:text-[#818CF8]';
+              ? 'text-[#B8862E] dark:text-[#D4A142]'
+              : 'text-[#4A5FD1] dark:text-[#8FA0FA]';
 
     return (
         <span
             className={cn(
-                'inline-flex flex-col gap-0.5 rounded-full border border-neutral-200/80 bg-white px-3 py-1 dark:border-neutral-800 dark:bg-[#111827]',
+                'inline-flex flex-col gap-1 rounded-md border border-[rgba(30,36,48,0.08)] bg-white px-2.5 py-1 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]',
                 className,
             )}
         >
-            <span className={cn('text-[11px] font-semibold leading-none', textColor)}>
-                {registered}/{quota} mendaftar
+            <span className={cn('font-mono-sigap text-[11px] font-medium leading-none', textColor)}>
+                {registered}/{quota} kuota
             </span>
-            {/* Mini progress bar */}
-            <span className="h-1 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+            {/* Progress bar tipis 4px rata */}
+            <span className="h-1 w-full overflow-hidden rounded-full bg-[#F0F2F5] dark:bg-[#21293A]">
                 <span
-                    className={cn('block h-full rounded-full transition-all duration-500', barColor)}
+                    className={cn('block h-full transition-all duration-300', barColor)}
                     style={{ width: `${pct}%` }}
                 />
             </span>

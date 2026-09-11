@@ -21,7 +21,16 @@ class KepanitiaanFactory extends Factory
             'kegiatan_id' => Kegiatan::factory(),
             'user_id' => User::factory(),
             'jabatan' => fake()->randomElement(JabatanKepanitiaan::cases())->value,
+            'is_koordinator' => false,
         ];
+    }
+
+    /**
+     * State untuk koordinator divisi.
+     */
+    public function koordinator(): static
+    {
+        return $this->state(['is_koordinator' => true]);
     }
 
     /**

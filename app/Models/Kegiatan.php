@@ -16,6 +16,7 @@ class Kegiatan extends Model
 
     protected $fillable = [
         'team_id',
+        'periode_id',
         'nama',
         'deskripsi',
         'tipe',
@@ -28,14 +29,29 @@ class Kegiatan extends Model
         return $this->belongsTo(Team::class);
     }
 
+    public function periode(): BelongsTo
+    {
+        return $this->belongsTo(Periode::class);
+    }
+
     public function sesi(): HasMany
     {
         return $this->hasMany(Sesi::class);
     }
 
-    public function divisiPanitia(): HasMany
+    public function kepanitiaan(): HasMany
     {
-        return $this->hasMany(DivisiPanitia::class);
+        return $this->hasMany(Kepanitiaan::class);
+    }
+
+    public function tugas(): HasMany
+    {
+        return $this->hasMany(Tugas::class);
+    }
+
+    public function surat(): HasMany
+    {
+        return $this->hasMany(Surat::class);
     }
 
     public function rsvp(): HasMany

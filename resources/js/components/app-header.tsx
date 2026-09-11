@@ -4,6 +4,7 @@ import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { TeamSwitcher } from '@/components/team-switcher';
+import { PeriodeSwitcher } from '@/components/periode-switcher';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,6 +246,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
+                        <PeriodeSwitcher inHeader />
                         <TeamSwitcher inHeader />
                     </div>
                 </div>

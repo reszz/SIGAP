@@ -1,5 +1,18 @@
-﻿import { Head, useForm, usePage } from '@inertiajs/react';
-import { CalendarDays, Clock, MapPin, Plus, Trash2 } from 'lucide-react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import {
+    ArrowLeft,
+    CalendarDays,
+    Clock,
+    MapPin,
+    Plus,
+    Trash2,
+    Sparkles,
+    Users,
+    CheckCircle2,
+    Palette,
+} from 'lucide-react';
+import { confirmDelete, showSuccess, Toast } from '@/lib/sweetalert';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,15 +51,15 @@ const EMPTY_SESI: SesiForm = {
 };
 
 const PALET_WARNA = [
-    '#5B4FE9', '#FF6F59', '#FFC857', '#2EC4B6', '#F45B8D',
-    '#4FB6E9', '#9BD94B', '#A855C9', '#F2994A', '#1B8A8A',
+    '#4A5FD1', '#2E9E82', '#B8862E', '#727C8E', '#C4514A',
+    '#3B4DB8', '#26856E', '#1E2430', '#586DE6', '#8FA0FA',
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function InputError({ message }: { message?: string }) {
     if (!message) return null;
-    return <p className="mt-1 text-xs text-red-500">{message}</p>;
+    return <p className="mt-1 text-xs text-[#C4514A] font-medium">{message}</p>;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -58,9 +71,9 @@ export default function KegiatanCreate() {
     const { data, setData, post, processing, errors } = useForm<KegiatanForm>({
         nama: '',
         deskripsi: '',
-        tipe: '',
+        tipe: 'wajib_hadir',
         kuota: '',
-        warna: '',
+        warna: '#4A5FD1',
         sesi: [{ ...EMPTY_SESI, rundown: [] }],
     });
 
@@ -68,11 +81,32 @@ export default function KegiatanCreate() {
 
     function addSesi() {
         setData('sesi', [...data.sesi, { ...EMPTY_SESI, rundown: [] }]);
+        Toast.fire({
+            icon: 'info',
+            title: `Sesi ${data.sesi.length + 1} ditambahkan.`,
+        });
     }
 
-    function removeSesi(idx: number) {
-        if (data.sesi.length <= 1) return;
+    async function removeSesi(idx: number) {
+        if (data.sesi.length <= 1) {
+            Toast.fire({
+                icon: 'warning',
+                title: 'Minimal harus ada 1 sesi kegiatan.',
+            });
+            return;
+        }
+
+        const confirmed = await confirmDelete(
+            `Sesi ${idx + 1}`,
+            'Hapus sesi ini dari rancangan kegiatan?',
+        );
+        if (!confirmed) return;
+
         setData('sesi', data.sesi.filter((_, i) => i !== idx));
+        Toast.fire({
+            icon: 'success',
+            title: `Sesi ${idx + 1} berhasil dihapus.`,
+        });
     }
 
     function updateSesi(idx: number, field: keyof Omit<SesiForm, 'rundown'>, value: string) {
@@ -87,15 +121,32 @@ export default function KegiatanCreate() {
             i === sesiIdx ? { ...s, rundown: [...s.rundown, { ...EMPTY_RUNDOWN }] } : s,
         );
         setData('sesi', updated);
+        Toast.fire({
+            icon: 'info',
+            title: 'Baris rundown ditambahkan.',
+        });
     }
 
-    function removeRundown(sesiIdx: number, rundownIdx: number) {
+    async function removeRundown(sesiIdx: number, rundownIdx: number) {
+        const row = data.sesi[sesiIdx]?.rundown[rundownIdx];
+        const label = row?.uraian_acara ? `"${row.uraian_acara}"` : `Baris #${rundownIdx + 1}`;
+
+        const confirmed = await confirmDelete(
+            'Item Rundown',
+            `Hapus ${label} dari susunan rundown sesi ${sesiIdx + 1}?`,
+        );
+        if (!confirmed) return;
+
         const updated = data.sesi.map((s, i) =>
             i === sesiIdx
                 ? { ...s, rundown: s.rundown.filter((_, j) => j !== rundownIdx) }
                 : s,
         );
         setData('sesi', updated);
+        Toast.fire({
+            icon: 'success',
+            title: 'Baris rundown berhasil dihapus.',
+        });
     }
 
     function updateRundown(
@@ -121,337 +172,542 @@ export default function KegiatanCreate() {
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        post(`/${teamSlug}/pengurus/kegiatan`);
+        post(`/${teamSlug}/pengurus/kegiatan`, {
+            onSuccess: () => {
+                showSuccess(
+                    'Kegiatan Berhasil Dibuat!',
+                    'Kegiatan dan susunan jadwal sesi telah tersimpan ke sistem.',
+                );
+            },
+        });
     }
 
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
         <>
-            <Head title="Tambah Kegiatan" />
+            <Head title="Tambah Kegiatan Baru" />
 
-            <div className="mx-auto max-w-2xl p-4">
-                <div className="mb-6">
-                    <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                        Tambah Kegiatan
-                    </h1>
-                    <p className="mt-0.5 text-sm text-neutral-500">
-                        Isi data kegiatan dan minimal 1 sesi.
-                    </p>
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                {/* ── Breadcrumb ── */}
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link href={`/${teamSlug}/pengurus/kegiatan`}>
+                                    Kegiatan
+                                </Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>Create</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+                {/* ── Header ── */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div className="mb-1 flex items-center gap-2">
+                            <Link
+                                href={`/${teamSlug}/pengurus/kegiatan`}
+                                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[#727C8E] hover:text-[#4A5FD1] dark:text-[#8C97A8]"
+                            >
+                                <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
+                                <span>Kembali ke Kelola Kegiatan</span>
+                            </Link>
+                        </div>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
+                            Tambah Kegiatan Baru
+                        </h1>
+                        <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                            Rancang informasi acara, tema warna, tipe kehadiran,
+                            dan jadwal sesi
+                        </p>
+                    </div>
                 </div>
 
                 <form onSubmit={submit} className="flex flex-col gap-6">
-                    {/* ── Info Kegiatan ──────────────────────────────────── */}
-                    <section className="rounded-xl border border-sidebar-border/70 bg-white p-5 dark:border-sidebar-border dark:bg-neutral-900">
-                        <h2 className="mb-4 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                            Info Kegiatan
-                        </h2>
-
-                        <div className="flex flex-col gap-4">
+                    {/* ── 1. Informasi Kegiatan ── */}
+                    <section className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 sm:p-8 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                        <div className="mb-6 flex items-center gap-3 border-b border-[rgba(30,36,48,0.08)] pb-4 dark:border-[rgba(255,255,255,0.08)]">
+                            <div className="flex size-8 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
+                                <Sparkles className="size-4" />
+                            </div>
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Nama Kegiatan <span className="text-red-500">*</span>
+                                <h2 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                    Informasi Utama
+                                </h2>
+                                <p className="text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                                    Nama, deskripsi, tipe kehadiran, dan aksen
+                                    warna
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-5">
+                            {/* Nama Kegiatan */}
+                            <div>
+                                <label className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                    Nama Kegiatan{' '}
+                                    <span className="text-[#C4514A]">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={data.nama}
-                                    onChange={(e) => setData('nama', e.target.value)}
-                                    placeholder="contoh: Rapat Rutin Bulanan"
-                                    className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                    onChange={(e) =>
+                                        setData('nama', e.target.value)
+                                    }
+                                    placeholder="Contoh: Musyawarah Anggota & Seminar Nasional"
+                                    className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3.5 py-2 text-xs font-medium text-[#1E2430] outline-none focus:border-[#4A5FD1] focus:ring-2 focus:ring-[#4A5FD1]/20 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                 />
                                 <InputError message={errors.nama} />
                             </div>
 
+                            {/* Deskripsi */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Deskripsi
+                                <label className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                    Deskripsi Kegiatan
                                 </label>
                                 <textarea
                                     value={data.deskripsi}
-                                    onChange={(e) => setData('deskripsi', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('deskripsi', e.target.value)
+                                    }
                                     rows={3}
-                                    placeholder="Opsional — informasi tambahan tentang kegiatan"
-                                    className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                    placeholder="Tuliskan tujuan kegiatan, target peserta, atau penjelasan singkat acara..."
+                                    className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3.5 py-2 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] focus:ring-2 focus:ring-[#4A5FD1]/20 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                 />
                                 <InputError message={errors.deskripsi} />
                             </div>
 
+                            {/* Tipe Kegiatan Radio Cards */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Tipe Kegiatan <span className="text-red-500">*</span>
+                                <label className="mb-2 block text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                    Tipe Kehadiran{' '}
+                                    <span className="text-[#C4514A]">*</span>
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {(['wajib_hadir', 'terbuka'] as const).map((t) => (
-                                        <button
-                                            key={t}
-                                            type="button"
-                                            onClick={() => setData('tipe', t)}
-                                            className={`rounded-lg border p-3 text-left text-sm transition ${
-                                                data.tipe === t
-                                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                                                    : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setData('tipe', 'wajib_hadir')
+                                        }
+                                        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 text-left transition-all ${
+                                            data.tipe === 'wajib_hadir'
+                                                ? 'border-[#4A5FD1] bg-[#4A5FD1]/10 dark:border-[#4A5FD1] dark:bg-[#4A5FD1]/20'
+                                                : 'border-[rgba(30,36,48,0.12)] bg-white hover:border-[#4A5FD1]/40 dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B]'
+                                        }`}
+                                    >
+                                        <div
+                                            className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md ${
+                                                data.tipe === 'wajib_hadir'
+                                                    ? 'bg-[#4A5FD1] text-white'
+                                                    : 'bg-[#F0F2F5] text-[#727C8E] dark:bg-[#21293A]'
                                             }`}
                                         >
-                                            <span className="font-medium">
-                                                {t === 'wajib_hadir' ? 'Wajib Hadir' : 'Terbuka'}
-                                            </span>
-                                            <p className="mt-0.5 text-xs opacity-70">
-                                                {t === 'wajib_hadir'
-                                                    ? 'Semua anggota otomatis boleh hadir, tanpa RSVP'
-                                                    : 'Ada kuota, anggota wajib RSVP dulu'}
+                                            <Users className="size-3.5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-display text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                                    Wajib Hadir
+                                                </span>
+                                                {data.tipe ===
+                                                    'wajib_hadir' && (
+                                                    <CheckCircle2 className="size-3.5 text-[#4A5FD1]" />
+                                                )}
+                                            </div>
+                                            <p className="mt-0.5 text-[11px] leading-relaxed text-[#727C8E] dark:text-[#8C97A8]">
+                                                Semua anggota otomatis berhak
+                                                hadir tanpa perlu mendaftar /
+                                                RSVP.
                                             </p>
-                                        </button>
-                                    ))}
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setData('tipe', 'terbuka')
+                                        }
+                                        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 text-left transition-all ${
+                                            data.tipe === 'terbuka'
+                                                ? 'border-[#2E9E82] bg-[#2E9E82]/10 dark:border-[#2E9E82] dark:bg-[#2E9E82]/20'
+                                                : 'border-[rgba(30,36,48,0.12)] bg-white hover:border-[#2E9E82]/40 dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B]'
+                                        }`}
+                                    >
+                                        <div
+                                            className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md ${
+                                                data.tipe === 'terbuka'
+                                                    ? 'bg-[#2E9E82] text-white'
+                                                    : 'bg-[#F0F2F5] text-[#727C8E] dark:bg-[#21293A]'
+                                            }`}
+                                        >
+                                            <Sparkles className="size-3.5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-display text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                                    Terbuka (Ada Kuota)
+                                                </span>
+                                                {data.tipe === 'terbuka' && (
+                                                    <CheckCircle2 className="size-3.5 text-[#2E9E82]" />
+                                                )}
+                                            </div>
+                                            <p className="mt-0.5 text-[11px] leading-relaxed text-[#727C8E] dark:text-[#8C97A8]">
+                                                Peserta harus mendaftar (RSVP)
+                                                terlebih dahulu sesuai kuota.
+                                            </p>
+                                        </div>
+                                    </button>
                                 </div>
                                 <InputError message={errors.tipe} />
                             </div>
 
+                            {/* Kuota (Jika Terbuka) */}
                             {data.tipe === 'terbuka' && (
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                        Kuota Peserta <span className="text-red-500">*</span>
+                                <div className="rounded-lg border border-[#2E9E82]/20 bg-[#2E9E82]/10 p-4 dark:bg-[#2E9E82]/20">
+                                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#2E9E82] uppercase dark:text-[#34B394]">
+                                        Kuota Maksimal Peserta{' '}
+                                        <span className="text-[#C4514A]">
+                                            *
+                                        </span>
                                     </label>
                                     <input
                                         type="number"
                                         min={1}
                                         value={data.kuota}
-                                        onChange={(e) => setData('kuota', e.target.value)}
-                                        placeholder="contoh: 50"
-                                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                        onChange={(e) =>
+                                            setData('kuota', e.target.value)
+                                        }
+                                        placeholder="Contoh: 100"
+                                        className="font-mono-sigap w-44 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#2E9E82] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                     />
                                     <InputError message={errors.kuota} />
                                 </div>
                             )}
 
+                            {/* Pilihan Warna */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Warna
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                    {PALET_WARNA.map((w) => (
-                                        <button
-                                            key={w}
-                                            type="button"
-                                            onClick={() => setData('warna', w)}
-                                            className={`size-7 rounded-full transition ${data.warna === w ? 'ring-2 ring-offset-2 ring-neutral-400' : ''}`}
-                                            style={{ backgroundColor: w }}
-                                        />
-                                    ))}
+                                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                    <Palette className="size-3.5" />
+                                    <span>Palet Warna Aksen</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                    {PALET_WARNA.map((w) => {
+                                        const isSelected = data.warna === w;
+                                        return (
+                                            <button
+                                                key={w}
+                                                type="button"
+                                                onClick={() =>
+                                                    setData('warna', w)
+                                                }
+                                                className={`size-7 cursor-pointer rounded-full transition-all ${
+                                                    isSelected
+                                                        ? 'scale-110 ring-2 ring-[#4A5FD1] ring-offset-2 dark:ring-offset-[#181E2B]'
+                                                        : 'opacity-80 hover:scale-105 hover:opacity-100'
+                                                }`}
+                                                style={{ backgroundColor: w }}
+                                                title={`Pilih warna ${w}`}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* ── Jadwal Sesi ────────────────────────────────────── */}
-                    <section className="rounded-xl border border-sidebar-border/70 bg-white p-5 dark:border-sidebar-border dark:bg-neutral-900">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                                Jadwal Sesi
-                            </h2>
+                    {/* ── 2. Jadwal Sesi & Rundown ── */}
+                    <section className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 sm:p-8 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(30,36,48,0.08)] pb-4 dark:border-[rgba(255,255,255,0.08)]">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-8 items-center justify-center rounded-md bg-[#B8862E]/12 text-[#B8862E] dark:bg-[#B8862E]/20 dark:text-[#D4A142]">
+                                    <CalendarDays className="size-4" />
+                                </div>
+                                <div>
+                                    <h2 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                        Jadwal Sesi & Rundown
+                                    </h2>
+                                    <p className="text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                                        Tentukan tanggal, jam, lokasi, dan
+                                        susunan acara
+                                    </p>
+                                </div>
+                            </div>
+
                             <button
                                 type="button"
                                 onClick={addSesi}
-                                className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 px-2.5 py-1 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                                className="flex items-center gap-1.5 rounded-lg border border-[rgba(30,36,48,0.12)] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#4A5FD1] transition hover:bg-[#F6F7F9] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#8FA0FA]"
                             >
-                                <Plus className="size-3" /> Tambah Sesi
+                                <Plus className="size-3.5" /> Tambah Sesi
                             </button>
                         </div>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-6">
                             {data.sesi.map((sesi, idx) => (
                                 <div
                                     key={idx}
-                                    className="relative rounded-lg border border-neutral-200 p-4 dark:border-neutral-700"
+                                    className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/40 p-4.5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/30"
                                 >
-                                    {/* Header sesi */}
-                                    <div className="mb-3 flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5 text-xs font-medium text-neutral-500">
-                                            <CalendarDays className="size-3.5" />
+                                    {/* Header Sesi */}
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <span className="rounded-md bg-[#4A5FD1]/12 px-2.5 py-0.5 text-xs font-semibold text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
                                             Sesi {idx + 1}
                                         </span>
+
                                         {data.sesi.length > 1 && (
                                             <button
                                                 type="button"
                                                 onClick={() => removeSesi(idx)}
-                                                className="text-red-400 hover:text-red-600"
+                                                className="flex items-center gap-1 text-xs font-medium text-[#727C8E] transition hover:text-[#C4514A]"
                                             >
-                                                <Trash2 className="size-3.5" />
+                                                <Trash2 className="size-3.5" />{' '}
+                                                Hapus Sesi
                                             </button>
                                         )}
                                     </div>
 
-                                    <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="grid gap-4 sm:grid-cols-2">
                                         {/* Tanggal */}
                                         <div className="sm:col-span-2">
-                                            <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                                <CalendarDays className="mr-1 inline size-3" />
-                                                Tanggal
+                                            <label className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                                Tanggal Sesi{' '}
+                                                <span className="text-[#C4514A]">
+                                                    *
+                                                </span>
                                             </label>
                                             <input
                                                 type="date"
                                                 value={sesi.tanggal}
-                                                onChange={(e) => updateSesi(idx, 'tanggal', e.target.value)}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                                onChange={(e) =>
+                                                    updateSesi(
+                                                        idx,
+                                                        'tanggal',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="font-mono-sigap w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                             />
                                             <InputError
-                                                message={(errors as Record<string, string>)[`sesi.${idx}.tanggal`]}
+                                                message={
+                                                    (
+                                                        errors as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[`sesi.${idx}.tanggal`]
+                                                }
                                             />
                                         </div>
 
-                                        {/* Waktu mulai */}
+                                        {/* Waktu Mulai */}
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                                <Clock className="mr-1 inline size-3" />
-                                                Mulai
+                                            <label className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                                <Clock className="size-3 text-[#4A5FD1]" />
+                                                <span>Waktu Mulai</span>{' '}
+                                                <span className="text-[#C4514A]">
+                                                    *
+                                                </span>
                                             </label>
                                             <input
                                                 type="time"
                                                 value={sesi.waktu_mulai}
-                                                onChange={(e) => updateSesi(idx, 'waktu_mulai', e.target.value)}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                                onChange={(e) =>
+                                                    updateSesi(
+                                                        idx,
+                                                        'waktu_mulai',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="font-mono-sigap w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                             />
                                             <InputError
-                                                message={(errors as Record<string, string>)[`sesi.${idx}.waktu_mulai`]}
+                                                message={
+                                                    (
+                                                        errors as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[`sesi.${idx}.waktu_mulai`]
+                                                }
                                             />
                                         </div>
 
-                                        {/* Waktu selesai */}
+                                        {/* Waktu Selesai */}
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                                <Clock className="mr-1 inline size-3" />
-                                                Selesai
+                                            <label className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                                <Clock className="size-3 text-[#4A5FD1]" />
+                                                <span>Waktu Selesai</span>{' '}
+                                                <span className="text-[#C4514A]">
+                                                    *
+                                                </span>
                                             </label>
                                             <input
                                                 type="time"
                                                 value={sesi.waktu_selesai}
-                                                onChange={(e) => updateSesi(idx, 'waktu_selesai', e.target.value)}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                                onChange={(e) =>
+                                                    updateSesi(
+                                                        idx,
+                                                        'waktu_selesai',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="font-mono-sigap w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                             />
                                             <InputError
-                                                message={(errors as Record<string, string>)[`sesi.${idx}.waktu_selesai`]}
+                                                message={
+                                                    (
+                                                        errors as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[
+                                                        `sesi.${idx}.waktu_selesai`
+                                                    ]
+                                                }
                                             />
                                         </div>
 
                                         {/* Lokasi */}
                                         <div className="sm:col-span-2">
-                                            <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                                <MapPin className="mr-1 inline size-3" />
-                                                Lokasi
+                                            <label className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                                <MapPin className="size-3 text-[#4A5FD1]" />
+                                                <span>Lokasi / Ruangan</span>{' '}
+                                                <span className="text-[#C4514A]">
+                                                    *
+                                                </span>
                                             </label>
                                             <input
                                                 type="text"
                                                 value={sesi.lokasi}
-                                                onChange={(e) => updateSesi(idx, 'lokasi', e.target.value)}
-                                                placeholder="contoh: Ruang Rapat Lantai 3"
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                                onChange={(e) =>
+                                                    updateSesi(
+                                                        idx,
+                                                        'lokasi',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Contoh: Gedung Aula Utama Lt. 2 / Zoom Meeting"
+                                                className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs font-medium text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                             />
                                             <InputError
-                                                message={(errors as Record<string, string>)[`sesi.${idx}.lokasi`]}
+                                                message={
+                                                    (
+                                                        errors as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[`sesi.${idx}.lokasi`]
+                                                }
                                             />
                                         </div>
+                                    </div>
 
-                                        {/* ── Rundown sub-section ──────── */}
-                                        <div className="sm:col-span-2 mt-2 border-t border-neutral-100 pt-3 dark:border-neutral-700">
-                                            <div className="mb-2 flex items-center justify-between">
-                                                <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                                    Rundown
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addRundown(idx)}
-                                                    className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 px-2 py-0.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
-                                                >
-                                                    <Plus className="size-3" /> Tambah Baris
-                                                </button>
-                                            </div>
-
-                                            {sesi.rundown.length === 0 ? (
-                                                <p className="text-xs italic text-neutral-400">
-                                                    Belum ada baris rundown.
-                                                </p>
-                                            ) : (
-                                                <div className="flex flex-col gap-2">
-                                                    {sesi.rundown.map((row, rIdx) => (
-                                                        <div
-                                                            key={rIdx}
-                                                            className="flex items-start gap-2"
-                                                        >
-                                                            <span className="mt-2 w-5 shrink-0 text-center text-xs font-medium text-neutral-400">
-                                                                {rIdx + 1}
-                                                            </span>
-                                                            <div className="flex flex-col">
-                                                                <input
-                                                                    type="time"
-                                                                    value={row.waktu}
-                                                                    onChange={(e) =>
-                                                                        updateRundown(idx, rIdx, 'waktu', e.target.value)
-                                                                    }
-                                                                    className="w-28 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-                                                                />
-                                                                <InputError
-                                                                    message={
-                                                                        (errors as Record<string, string>)[
-                                                                            `sesi.${idx}.rundown.${rIdx}.waktu`
-                                                                        ]
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <div className="flex flex-1 flex-col">
-                                                                <input
-                                                                    type="text"
-                                                                    value={row.uraian_acara}
-                                                                    onChange={(e) =>
-                                                                        updateRundown(
-                                                                            idx,
-                                                                            rIdx,
-                                                                            'uraian_acara',
-                                                                            e.target.value,
-                                                                        )
-                                                                    }
-                                                                    placeholder="Uraian acara"
-                                                                    className="w-full rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-                                                                />
-                                                                <InputError
-                                                                    message={
-                                                                        (errors as Record<string, string>)[
-                                                                            `sesi.${idx}.rundown.${rIdx}.uraian_acara`
-                                                                        ]
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeRundown(idx, rIdx)}
-                                                                className="mt-1.5 shrink-0 text-red-400 hover:text-red-600"
-                                                                aria-label="Hapus baris rundown"
-                                                            >
-                                                                <Trash2 className="size-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                    {/* ── Susunan Rundown untuk Sesi Ini ── */}
+                                    <div className="mt-5 border-t border-[rgba(30,36,48,0.06)] pt-4 dark:border-[rgba(255,255,255,0.06)]">
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <span className="text-[11px] font-semibold tracking-wider text-[#727C8E] uppercase dark:text-[#8C97A8]">
+                                                Rundown Sesi {idx + 1}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => addRundown(idx)}
+                                                className="flex items-center gap-1 text-[11px] font-semibold text-[#4A5FD1] hover:underline dark:text-[#8FA0FA]"
+                                            >
+                                                <Plus className="size-3" />{' '}
+                                                Tambah Baris
+                                            </button>
                                         </div>
+
+                                        {sesi.rundown.length === 0 ? (
+                                            <p className="rounded-md border border-dashed border-[rgba(30,36,48,0.12)] py-3 text-center text-xs text-[#727C8E] dark:border-[rgba(255,255,255,0.12)] dark:text-[#8C97A8]">
+                                                Belum ada rundown. Klik
+                                                &ldquo;Tambah Baris&rdquo; untuk
+                                                menyusun acara.
+                                            </p>
+                                        ) : (
+                                            <div className="flex flex-col gap-2">
+                                                {sesi.rundown.map((r, rIdx) => (
+                                                    <div
+                                                        key={rIdx}
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        <input
+                                                            type="time"
+                                                            value={r.waktu}
+                                                            onChange={(e) =>
+                                                                updateRundown(
+                                                                    idx,
+                                                                    rIdx,
+                                                                    'waktu',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className="font-mono-sigap w-24 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-2 py-1.5 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            value={
+                                                                r.uraian_acara
+                                                            }
+                                                            onChange={(e) =>
+                                                                updateRundown(
+                                                                    idx,
+                                                                    rIdx,
+                                                                    'uraian_acara',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            placeholder={`Contoh: Registrasi Peserta & Coffee Break`}
+                                                            className="min-w-0 flex-1 rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-1.5 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                removeRundown(
+                                                                    idx,
+                                                                    rIdx,
+                                                                )
+                                                            }
+                                                            className="rounded-md p-1.5 text-[#727C8E] transition hover:bg-[#C4514A]/10 hover:text-[#C4514A]"
+                                                            title="Hapus baris"
+                                                        >
+                                                            <Trash2 className="size-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </section>
 
-                    {/* ── Submit ─────────────────────────────────────────── */}
-                    <div className="flex justify-end gap-3">
-                        <a
+                    {/* ── Submit Action ── */}
+                    <div className="flex items-center justify-end gap-3 pb-8">
+                        <Link
                             href={`/${teamSlug}/pengurus/kegiatan`}
-                            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                            className="rounded-lg border border-[rgba(30,36,48,0.12)] bg-white px-5 py-2 text-xs font-semibold text-[#1E2430] transition hover:bg-[#F6F7F9] dark:border-[rgba(255,255,255,0.1)] dark:bg-[#181E2B] dark:text-[#E6ECF5] dark:hover:bg-[#21293A]"
                         >
                             Batal
-                        </a>
+                        </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-lg bg-[#4A5FD1] px-6 py-2 text-xs font-semibold text-white transition hover:bg-[#3B4DB8] disabled:opacity-50"
                         >
-                            {processing ? 'Menyimpan...' : 'Simpan Kegiatan'}
+                            <CheckCircle2 className="size-4" />
+                            <span>
+                                {processing
+                                    ? 'Menyimpan...'
+                                    : 'Simpan & Terbitkan Kegiatan'}
+                            </span>
                         </button>
                     </div>
                 </form>

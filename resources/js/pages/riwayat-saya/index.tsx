@@ -1,4 +1,4 @@
-﻿import { Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { CalendarCheck2, ClipboardList, Star } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ type Props = {
 function formatTanggal(iso: string): string {
     return new Date(iso).toLocaleDateString('id-ID', {
         day: 'numeric',
-        month: 'long',
+        month: 'short',
         year: 'numeric',
     });
 }
@@ -51,14 +51,14 @@ function formatWaktu(iso: string): string {
 }
 
 function truncate(text: string, max = 200): string {
-    return text.length > max ? text.slice(0, max) + '\u2026' : text;
+    return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
 function EmptyState({ message }: { message: string }) {
     return (
-        <p className="py-6 text-center text-sm text-neutral-400">{message}</p>
+        <p className="py-6 text-center text-xs italic text-[#727C8E]/70 dark:text-[#8C97A8]/70">{message}</p>
     );
 }
 
@@ -72,12 +72,12 @@ function Section({
     children: React.ReactNode;
 }) {
     return (
-        <section className="rounded-xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
-            <div className="mb-4 flex items-center gap-2">
-                <span className="text-indigo-600 dark:text-indigo-400">
+        <section className="rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-6 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+            <div className="mb-4 flex items-center gap-2 border-b border-[rgba(30,36,48,0.08)] pb-3.5 dark:border-[rgba(255,255,255,0.08)]">
+                <span className="text-[#4A5FD1] dark:text-[#8FA0FA]">
                     {icon}
                 </span>
-                <h2 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                <h2 className="font-display text-sm font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                     {title}
                 </h2>
             </div>
@@ -87,17 +87,13 @@ function Section({
 }
 
 function RsvpStatusBadge({ status }: { status: RiwayatRsvpItem['status'] }) {
-    const styles: Record<RiwayatRsvpItem['status'], string> = {
-        terdaftar:
-            'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-        dibatalkan:
-            'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400',
-    };
-    return (
-        <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status]}`}
-        >
-            {status}
+    return status === 'terdaftar' ? (
+        <span className="inline-flex items-center rounded-md bg-[#2E9E82]/12 px-2.5 py-0.5 text-xs font-semibold text-[#2E9E82] dark:bg-[#2E9E82]/20 dark:text-[#34B394]">
+            Terdaftar
+        </span>
+    ) : (
+        <span className="inline-flex items-center rounded-md bg-[#727C8E]/12 px-2.5 py-0.5 text-xs font-semibold text-[#727C8E] dark:bg-[#727C8E]/20 dark:text-[#8C97A8]">
+            Dibatalkan
         </span>
     );
 }
@@ -113,39 +109,37 @@ export default function RiwayatSaya({
         <>
             <Head title="Riwayat Saya" />
 
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 md:p-6">
+            <div className="flex h-full flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full">
                 <header>
-                    <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1E2430] sm:text-3xl dark:text-[#E6ECF5]">
                         Riwayat Saya
                     </h1>
-                    <p className="mt-1 text-sm text-neutral-500">
-                        Rekap keikutsertaanmu di team ini — RSVP, presensi, dan
-                        evaluasi.
+                    <p className="mt-0.5 text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                        Rekapitulasi keikutsertaan kegiatan — RSVP, presensi, dan ulasan evaluasi
                     </p>
                 </header>
 
                 {/* ── Section RSVP ───────────────────────────────────────── */}
                 <Section
                     title="Riwayat RSVP"
-                    icon={<ClipboardList className="size-5" />}
+                    icon={<ClipboardList className="size-4" />}
                 >
                     {riwayatRsvp.length === 0 ? (
                         <EmptyState message="Belum ada riwayat RSVP di team ini." />
                     ) : (
-                        <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                        <ul className="divide-y divide-[rgba(30,36,48,0.06)] dark:divide-[rgba(255,255,255,0.06)]">
                             {riwayatRsvp.map((item) => (
                                 <li
                                     key={item.id}
                                     className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
                                 >
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                                        <p className="truncate text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                             {item.kegiatanNama}
                                         </p>
                                         {item.waktuDaftar && (
-                                            <p className="mt-0.5 text-xs text-neutral-500">
-                                                Daftar:{' '}
-                                                {formatTanggal(item.waktuDaftar)}
+                                            <p className="font-mono-sigap mt-0.5 text-[11px] text-[#727C8E] dark:text-[#8C97A8]">
+                                                Daftar: {formatTanggal(item.waktuDaftar)}
                                             </p>
                                         )}
                                     </div>
@@ -159,32 +153,26 @@ export default function RiwayatSaya({
                 {/* ── Section Presensi ───────────────────────────────────── */}
                 <Section
                     title="Riwayat Presensi"
-                    icon={<CalendarCheck2 className="size-5" />}
+                    icon={<CalendarCheck2 className="size-4" />}
                 >
                     {riwayatPresensi.length === 0 ? (
                         <EmptyState message="Belum ada riwayat presensi di team ini." />
                     ) : (
-                        <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                        <ul className="divide-y divide-[rgba(30,36,48,0.06)] dark:divide-[rgba(255,255,255,0.06)]">
                             {riwayatPresensi.map((item) => (
                                 <li
                                     key={item.id}
                                     className="py-3 first:pt-0 last:pb-0"
                                 >
-                                    <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                                    <p className="text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                         {item.kegiatanNama}
                                     </p>
-                                    <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-neutral-500">
+                                    <div className="font-mono-sigap mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-[#727C8E] dark:text-[#8C97A8]">
                                         <span>
-                                            Tanggal sesi:{' '}
-                                            {item.sesiTanggal
-                                                ? formatTanggal(item.sesiTanggal)
-                                                : '-'}
+                                            Sesi: {item.sesiTanggal ? formatTanggal(item.sesiTanggal) : '—'}
                                         </span>
                                         <span>
-                                            Presensi:{' '}
-                                            {item.waktuIsi
-                                                ? formatWaktu(item.waktuIsi)
-                                                : '-'}
+                                            Waktu Presensi: {item.waktuIsi ? formatWaktu(item.waktuIsi) : '—'}
                                         </span>
                                     </div>
                                 </li>
@@ -196,34 +184,31 @@ export default function RiwayatSaya({
                 {/* ── Section Evaluasi ───────────────────────────────────── */}
                 <Section
                     title="Riwayat Evaluasi"
-                    icon={<Star className="size-5" />}
+                    icon={<Star className="size-4" />}
                 >
                     {riwayatEvaluasi.length === 0 ? (
                         <EmptyState message="Belum ada riwayat evaluasi di team ini." />
                     ) : (
-                        <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                        <ul className="divide-y divide-[rgba(30,36,48,0.06)] dark:divide-[rgba(255,255,255,0.06)]">
                             {riwayatEvaluasi.map((item) => (
                                 <li
                                     key={item.id}
                                     className="py-3 first:pt-0 last:pb-0"
                                 >
                                     <div className="flex items-start justify-between gap-4">
-                                        <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                                        <p className="text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                                             {item.kegiatanNama}
                                         </p>
-                                        <span className="shrink-0 text-sm text-amber-500">
-                                            {'★'.repeat(item.rating)}
-                                            <span className="ml-1 text-xs text-neutral-500">
-                                                {item.rating}/5
-                                            </span>
+                                        <span className="font-mono-sigap shrink-0 text-xs font-semibold text-[#B8862E] dark:text-[#D4A142]">
+                                            ★ {item.rating} / 5
                                         </span>
                                     </div>
                                     {item.komentar && (
-                                        <p className="mt-1 text-sm text-neutral-500">
-                                            {truncate(item.komentar)}
+                                        <p className="mt-1 text-xs text-[#2E3542] dark:text-[#E6ECF5]">
+                                            &ldquo;{truncate(item.komentar)}&rdquo;
                                         </p>
                                     )}
-                                    <p className="mt-0.5 text-xs text-neutral-400">
+                                    <p className="font-mono-sigap mt-0.5 text-[11px] text-[#727C8E] dark:text-[#8C97A8]">
                                         {formatTanggal(item.tanggal)}
                                     </p>
                                 </li>

@@ -1,19 +1,19 @@
 import Swal from 'sweetalert2';
 
 /**
- * SVG Icons as sleek HTML strings matching Modern Indigo & Mint system
+ * SVG Icons as sleek HTML strings matching SIGAP Design System
  */
 const ICONS = {
     success: `
         <div class="swal-icon-badge swal-icon-success">
-            <svg class="size-7 text-emerald-500 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#2E9E82] dark:text-[#34B394]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 6 9 17l-5-5"/>
             </svg>
         </div>
     `,
     error: `
         <div class="swal-icon-badge swal-icon-error">
-            <svg class="size-7 text-red-500 dark:text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#C4514A] dark:text-[#D9615A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -22,7 +22,7 @@ const ICONS = {
     `,
     warning: `
         <div class="swal-icon-badge swal-icon-warning">
-            <svg class="size-7 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#B8862E] dark:text-[#D4A142]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -31,7 +31,7 @@ const ICONS = {
     `,
     delete: `
         <div class="swal-icon-badge swal-icon-delete">
-            <svg class="size-7 text-red-500 dark:text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#C4514A] dark:text-[#D9615A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18"/>
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
@@ -42,7 +42,7 @@ const ICONS = {
     `,
     question: `
         <div class="swal-icon-badge swal-icon-info">
-            <svg class="size-7 text-indigo-500 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#4A5FD1] dark:text-[#8FA0FA]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -51,7 +51,7 @@ const ICONS = {
     `,
     role: `
         <div class="swal-icon-badge swal-icon-role">
-            <svg class="size-7 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="size-6 text-[#B8862E] dark:text-[#D4A142]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.962.735H5.815a1 1 0 0 1-.962-.735L2.019 6.019a.5.5 0 0 1 .798-.519l4.277 3.664a1 1 0 0 0 1.516-.294z"/>
                 <path d="M5 21h14"/>
             </svg>
@@ -60,7 +60,7 @@ const ICONS = {
 };
 
 /**
- * Base SweetAlert2 instance with pristine Modern Indigo styling.
+ * Base SweetAlert2 instance with SIGAP Cool-Neutral styling.
  */
 export const SigapSwal = Swal.mixin({
     buttonsStyling: false,
@@ -91,9 +91,17 @@ export const Toast = Swal.mixin({
     showConfirmButton: false,
     timer: 2800,
     timerProgressBar: true,
+    showClass: {
+        popup: 'sigap-toast-show',
+    },
+    hideClass: {
+        popup: 'sigap-toast-hide',
+    },
     customClass: {
         popup: 'sigap-toast-popup',
+        icon: 'sigap-toast-icon',
         title: 'sigap-toast-title',
+        timerProgressBar: 'sigap-toast-progress',
     },
     didOpen: (toast) => {
         toast.onmouseenter = Swal.stopTimer;
@@ -109,8 +117,8 @@ export function showSuccess(title: string, text?: string) {
         html: `
             <div class="flex flex-col items-center text-center">
                 ${ICONS.success}
-                <h3 class="font-display text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">${title}</h3>
-                ${text ? `<p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-xs">${text}</p>` : ''}
+                <h3 class="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5] mb-1">${title}</h3>
+                ${text ? `<p class="text-xs text-[#727C8E] dark:text-[#8C97A8] font-normal leading-relaxed max-w-xs">${text}</p>` : ''}
             </div>
         `,
         confirmButtonText: 'Selesai',
@@ -130,8 +138,8 @@ export function showError(title: string, text?: string) {
         html: `
             <div class="flex flex-col items-center text-center">
                 ${ICONS.error}
-                <h3 class="font-display text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">${title}</h3>
-                ${text ? `<p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-xs">${text}</p>` : ''}
+                <h3 class="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5] mb-1">${title}</h3>
+                ${text ? `<p class="text-xs text-[#727C8E] dark:text-[#8C97A8] font-normal leading-relaxed max-w-xs">${text}</p>` : ''}
             </div>
         `,
         confirmButtonText: 'Tutup',
@@ -154,8 +162,8 @@ export async function confirmDelete(
         html: `
             <div class="flex flex-col items-center text-center">
                 ${ICONS.delete}
-                <h3 class="font-display text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">Hapus ${itemName}?</h3>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-xs">
+                <h3 class="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5] mb-1">Hapus ${itemName}?</h3>
+                <p class="text-xs text-[#727C8E] dark:text-[#8C97A8] font-normal leading-relaxed max-w-xs">
                     ${message ?? 'Tindakan ini permanen dan data terkait akan ikut terhapus dari sistem.'}
                 </p>
             </div>
@@ -187,8 +195,8 @@ export async function confirmRoleChange(
         html: `
             <div class="flex flex-col items-center text-center">
                 ${ICONS.role}
-                <h3 class="font-display text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">Ubah Role Pengguna?</h3>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-xs">
+                <h3 class="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5] mb-1">Ubah Role Pengguna?</h3>
+                <p class="text-xs text-[#727C8E] dark:text-[#8C97A8] font-normal leading-relaxed max-w-xs">
                     Role untuk <strong>${userName}</strong> akan dialihkan ke level <strong>${roleLabel}</strong>.
                 </p>
             </div>
@@ -221,8 +229,8 @@ export async function confirmAction(
         html: `
             <div class="flex flex-col items-center text-center">
                 ${ICONS.question}
-                <h3 class="font-display text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">${title}</h3>
-                ${text ? `<p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-xs">${text}</p>` : ''}
+                <h3 class="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5] mb-1">${title}</h3>
+                ${text ? `<p class="text-xs text-[#727C8E] dark:text-[#8C97A8] font-normal leading-relaxed max-w-xs">${text}</p>` : ''}
             </div>
         `,
         showCancelButton: true,
@@ -241,4 +249,3 @@ export async function confirmAction(
 }
 
 export default SigapSwal;
-

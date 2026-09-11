@@ -15,7 +15,7 @@ class Kepanitiaan extends Model
 
     protected $table = 'kepanitiaan';
 
-    protected $fillable = ['kegiatan_id', 'user_id', 'jabatan'];
+    protected $fillable = ['kegiatan_id', 'user_id', 'jabatan', 'is_koordinator'];
 
     /**
      * @return array<string, string>
@@ -24,6 +24,7 @@ class Kepanitiaan extends Model
     {
         return [
             'jabatan' => JabatanKepanitiaan::class,
+            'is_koordinator' => 'boolean',
         ];
     }
 
@@ -42,13 +43,28 @@ class Kepanitiaan extends Model
      *
      * Untuk jabatan tunggal (ketua_pelaksana, bendahara, sekretaris):
      * mencegah duplikasi jabatan yang sama di Kegiatan yang sama (FR-28, NFR-03).
-     * Divisi boleh banyak anggota — tidak ada cek untuk jabatan divisi.
+     * Koordinator hanya berlaku untuk divisi (div_acara, div_humas, div_pdd, div_logistik).
      *
-     * @throws \RuntimeException jika jabatan tunggal sudah terisi
+     * @throws \RuntimeException jika jabatan tunggal sudah terisi atau koordinator di-assign ke jabatan tunggal
      */
-    public static function assign(int $kegiatanId, int $userId, JabatanKepanitiaan $jabatan): self
-    {
+    public static function assign(
+        int $kegiatanId,
+        int $userId,
+        JabatanKepanitiaan $jabatan,
+        bool $isKoordinator = false
+    ): self {
+        $user = User::find($userId);
+        if ($user && $user->isPembina()) {
+            throw new \RuntimeException('Pembina tidak dapat ditugaskan ke dalam kepanitiaan kegiatan.');
+        }
+
         if ($jabatan->isTunggal()) {
+            if ($isKoordinator) {
+                throw new \RuntimeException(
+                    'Jabatan inti (ketua pelaksana/bendahara/sekretaris) tidak dapat di-assign sebagai koordinator divisi.'
+                );
+            }
+
             $existing = self::where('kegiatan_id', $kegiatanId)
                 ->where('jabatan', $jabatan->value)
                 ->first();
@@ -59,12 +75,48 @@ class Kepanitiaan extends Model
                     'Harap hapus jabatan lama terlebih dahulu sebelum assign ulang.'
                 );
             }
+        } elseif ($isKoordinator) {
+            // Unset koordinator lama jika divisi sudah memiliki koordinator sebelumnya
+            self::where('kegiatan_id', $kegiatanId)
+                ->where('jabatan', $jabatan->value)
+                ->where('is_koordinator', true)
+                ->update(['is_koordinator' => false]);
         }
 
         return self::create([
             'kegiatan_id' => $kegiatanId,
             'user_id' => $userId,
             'jabatan' => $jabatan->value,
+            'is_koordinator' => $isKoordinator,
         ]);
+    }
+
+    /**
+     * Set atau cabut status koordinator divisi.
+     *
+     * @throws \RuntimeException jika diterapkan pada jabatan inti
+     */
+    public function setKoordinator(bool $status = true): self
+    {
+        if ($status) {
+            if ($this->jabatan->isTunggal()) {
+                throw new \RuntimeException(
+                    'Jabatan inti tidak dapat dijadikan sebagai koordinator divisi.'
+                );
+            }
+
+            // Unset koordinator lain di divisi yang sama pada kegiatan ini
+            self::where('kegiatan_id', $this->kegiatan_id)
+                ->where('jabatan', $this->jabatan->value)
+                ->where('id', '!=', $this->id)
+                ->where('is_koordinator', true)
+                ->update(['is_koordinator' => false]);
+
+            $this->update(['is_koordinator' => true]);
+        } else {
+            $this->update(['is_koordinator' => false]);
+        }
+
+        return $this;
     }
 }

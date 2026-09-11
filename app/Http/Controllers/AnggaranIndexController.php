@@ -21,12 +21,23 @@ class AnggaranIndexController extends Controller
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         $user = $request->user();
 
-        $semuaKegiatan = Kegiatan::where('team_id', $team->id)
+        $periodeId = $user->current_periode_id;
+        $kegiatanQuery = Kegiatan::where('team_id', $team->id);
+        if ($periodeId) {
+            $kegiatanQuery->where(function ($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId)
+                    ->orWhereNull('periode_id');
+            });
+        }
+
+        $semuaKegiatan = $kegiatanQuery
             ->orderByDesc('created_at')
             ->get(['id', 'nama', 'warna']);
 
         $kegiatanList = $semuaKegiatan->filter(
-            fn ($k) => Gate::forUser($user)->allows('anggaran.manage', $k)
+            fn ($k) => $user->isSuperAdmin()
+                || $user->isPembina()
+                || Gate::forUser($user)->allows('anggaran.manage', $k)
                 || Gate::forUser($user)->allows('anggaran.manage-logistik', $k)
         )->values();
 
@@ -35,8 +46,17 @@ class AnggaranIndexController extends Controller
             ? $semuaKegiatan->firstWhere('id', $selectedKegiatanId)
             : null;
 
-        $canManageFull = $selectedKegiatan && Gate::forUser($user)->allows('anggaran.manage', $selectedKegiatan);
-        $canManageLogistik = ! $canManageFull && $selectedKegiatan && Gate::forUser($user)->allows('anggaran.manage-logistik', $selectedKegiatan);
+        $currentPeriode = $user->currentPeriode;
+        $isPeriodeEditable = ! $currentPeriode || $currentPeriode->is_aktif || $currentPeriode->isLatest();
+        $isReadOnly = $user->isPembina() || (! $isPeriodeEditable && ! $user->isSuperAdmin());
+
+        $canManageFull = ! $isReadOnly
+            && $selectedKegiatan
+            && Gate::forUser($user)->allows('anggaran.manage', $selectedKegiatan);
+        $canManageLogistik = ! $isReadOnly
+            && ! $canManageFull
+            && $selectedKegiatan
+            && Gate::forUser($user)->allows('anggaran.manage-logistik', $selectedKegiatan);
 
         $anggaran = $selectedKegiatan
             ? $selectedKegiatan->anggaran()->orderBy('jenis')->orderByDesc('created_at')->get()
@@ -56,6 +76,8 @@ class AnggaranIndexController extends Controller
             'anggaran' => $anggaran->values(),
             'canManageFull' => $canManageFull,
             'canManageLogistik' => $canManageLogistik,
+            'canInputRealisasi' => $canManageFull || $canManageLogistik,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 }

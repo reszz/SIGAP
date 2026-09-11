@@ -96,6 +96,66 @@ class Team extends Model
     }
 
     /**
+     * Get all organizational divisions for this team.
+     *
+     * @return HasMany<DivisiOrganisasi, $this>
+     */
+    public function divisiOrganisasi(): HasMany
+    {
+        return $this->hasMany(DivisiOrganisasi::class)->orderBy('urutan_tampil');
+    }
+
+    /**
+     * Get all structural officers for this team.
+     *
+     * @return HasMany<PengurusStruktur, $this>
+     */
+    public function pengurusStruktur(): HasMany
+    {
+        return $this->hasMany(PengurusStruktur::class)->orderBy('urutan_tampil');
+    }
+
+    /**
+     * Get all articles for this team.
+     *
+     * @return HasMany<Artikel, $this>
+     */
+    public function artikel(): HasMany
+    {
+        return $this->hasMany(Artikel::class);
+    }
+
+    /**
+     * Get all wishes for this team.
+     *
+     * @return HasMany<Wish, $this>
+     */
+    public function wishes(): HasMany
+    {
+        return $this->hasMany(Wish::class);
+    }
+
+    /**
+     * Get all periodes for this team.
+     *
+     * @return HasMany<Periode, $this>
+     */
+    public function periodes(): HasMany
+    {
+        return $this->hasMany(Periode::class);
+    }
+
+    /**
+     * Get all kegiatan for this team.
+     *
+     * @return HasMany<Kegiatan, $this>
+     */
+    public function kegiatan(): HasMany
+    {
+        return $this->hasMany(Kegiatan::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

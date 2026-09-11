@@ -1,25 +1,19 @@
-import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, CalendarDays } from 'lucide-react';
+import listPlugin from '@fullcalendar/list';
+import FullCalendar from '@fullcalendar/react';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { Head, usePage } from '@inertiajs/react';
+import {  CalendarDays } from 'lucide-react';
 import { useState } from 'react';
 import EventDetailCard from '@/components/event-detail-card';
 import { dashboard as anggotaDashboard } from '@/routes/anggota';
+import { events as kalenderEvents } from '@/routes/kalender';
 import { dashboard as pengurusDashboard } from '@/routes/pengurus';
 
 export default function KalenderIndex() {
-    const { currentTeam, auth } = usePage().props;
+    const { currentTeam } = usePage().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const isPengurus = auth.user.role === 'pengurus';
-
-    const dashboardUrl = currentTeam
-        ? isPengurus
-            ? pengurusDashboard.url(currentTeam.slug)
-            : anggotaDashboard.url(currentTeam.slug)
-        : '/';
 
     const [selectedKegiatanId, setSelectedKegiatanId] = useState<number | null>(null);
 
@@ -29,43 +23,37 @@ export default function KalenderIndex() {
 
             <div className="flex h-full flex-col gap-0">
                 {/* ── Page header ── */}
-                <div className="flex items-center gap-3 border-b border-sidebar-border/40 bg-background/80 px-5 py-4 backdrop-blur-sm">
-                    <Link
-                        href={dashboardUrl}
-                        className="flex size-8 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                        aria-label="Kembali ke dashboard"
-                    >
-                        <ArrowLeft className="size-4" />
-                    </Link>
-                    <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
-                    <CalendarDays className="size-5 text-indigo-500" />
+                <div className="flex items-center gap-3 border-b border-[rgba(30,36,48,0.08)] bg-white px-5 py-3.5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                    <div className="h-5 w-px bg-[rgba(30,36,48,0.08)] dark:bg-[rgba(255,255,255,0.08)]" />
+                    <div className="flex size-7.5 items-center justify-center rounded-md bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
+                        <CalendarDays className="size-4" />
+                    </div>
                     <div>
-                        <h1 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                        <h1 className="font-display text-sm font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                             Kalender Kegiatan
                         </h1>
-                        <p className="text-xs text-neutral-500">
-                            Klik event untuk melihat detail, jadwal sesi, dan presensi.
+                        <p className="text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                            Klik event untuk melihat detail kegiatan, jadwal sesi, dan status presensi.
                         </p>
                     </div>
                 </div>
 
                 {/* ── Calendar container ── */}
                 <div className="flex-1 overflow-hidden p-4">
-                    <div className="h-full overflow-hidden rounded-2xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-neutral-900
+                    <div className="h-full overflow-hidden rounded-lg border border-[rgba(30,36,48,0.08)] bg-white p-4 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]
                         [&_.fc]:h-full
-                        [&_.fc-button]:rounded-lg! [&_.fc-button]:border-0! [&_.fc-button]:bg-indigo-600! [&_.fc-button]:px-3! [&_.fc-button]:py-1.5! [&_.fc-button]:text-sm! [&_.fc-button]:font-medium! [&_.fc-button]:text-white! [&_.fc-button]:shadow-sm! [&_.fc-button:hover]:bg-indigo-700! [&_.fc-button:focus]:shadow-none!
-                        [&_.fc-button-active]:bg-indigo-800!
-                        [&_.fc-toolbar-title]:text-lg! [&_.fc-toolbar-title]:font-bold! [&_.fc-toolbar-title]:text-neutral-800! dark:[&_.fc-toolbar-title]:text-neutral-100!
-                        [&_.fc-col-header-cell-cushion]:py-2! [&_.fc-col-header-cell-cushion]:text-xs! [&_.fc-col-header-cell-cushion]:font-semibold! [&_.fc-col-header-cell-cushion]:uppercase! [&_.fc-col-header-cell-cushion]:tracking-wider! [&_.fc-col-header-cell-cushion]:text-neutral-500! dark:[&_.fc-col-header-cell-cushion]:text-neutral-400!
-                        [&_.fc-daygrid-day-number]:text-sm! [&_.fc-daygrid-day-number]:text-neutral-700! dark:[&_.fc-daygrid-day-number]:text-neutral-300!
-                        [&_.fc-day-today]:bg-indigo-50/60! dark:[&_.fc-day-today]:bg-indigo-950/20!
-                        [&_.fc-event]:cursor-pointer! [&_.fc-event]:rounded-md! [&_.fc-event]:border-0! [&_.fc-event]:text-xs! [&_.fc-event]:font-medium! [&_.fc-event]:transition-opacity! [&_.fc-event:hover]:opacity-80!
-                        [&_.fc-theme-standard_.fc-scrollgrid]:border-neutral-100! dark:[&_.fc-theme-standard_.fc-scrollgrid]:border-neutral-800!
-                        [&_.fc-theme-standard_td]:border-neutral-100! dark:[&_.fc-theme-standard_td]:border-neutral-800!
-                        [&_.fc-theme-standard_th]:border-neutral-100! dark:[&_.fc-theme-standard_th]:border-neutral-800!
-                        [&_.fc-list-day-cushion]:bg-neutral-50! dark:[&_.fc-list-day-cushion]:bg-neutral-800/60!
-                        [&_.fc-list-event:hover_td]:bg-indigo-50/50! dark:[&_.fc-list-event:hover_td]:bg-indigo-950/20!
-                        p-4
+                        [&_.fc-button]:rounded-md! [&_.fc-button]:border-0! [&_.fc-button]:bg-[#4A5FD1]! [&_.fc-button]:px-3! [&_.fc-button]:py-1.5! [&_.fc-button]:text-xs! [&_.fc-button]:font-semibold! [&_.fc-button]:text-white! [&_.fc-button]:shadow-none! [&_.fc-button:hover]:bg-[#3B4DB8]! [&_.fc-button:focus]:shadow-none!
+                        [&_.fc-button-active]:bg-[#3B4DB8]!
+                        [&_.fc-toolbar-title]:font-display! [&_.fc-toolbar-title]:text-base! [&_.fc-toolbar-title]:font-semibold! [&_.fc-toolbar-title]:text-[#1E2430]! dark:[&_.fc-toolbar-title]:text-[#E6ECF5]!
+                        [&_.fc-col-header-cell-cushion]:py-2! [&_.fc-col-header-cell-cushion]:text-[11px]! [&_.fc-col-header-cell-cushion]:font-semibold! [&_.fc-col-header-cell-cushion]:uppercase! [&_.fc-col-header-cell-cushion]:tracking-wider! [&_.fc-col-header-cell-cushion]:text-[#727C8E]! dark:[&_.fc-col-header-cell-cushion]:text-[#8C97A8]!
+                        [&_.fc-daygrid-day-number]:font-mono-sigap! [&_.fc-daygrid-day-number]:text-xs! [&_.fc-daygrid-day-number]:font-medium! [&_.fc-daygrid-day-number]:text-[#1E2430]! dark:[&_.fc-daygrid-day-number]:text-[#E6ECF5]!
+                        [&_.fc-day-today]:bg-[#4A5FD1]/6! dark:[&_.fc-day-today]:bg-[#4A5FD1]/15!
+                        [&_.fc-event]:cursor-pointer! [&_.fc-event]:rounded-md! [&_.fc-event]:border-0! [&_.fc-event]:text-xs! [&_.fc-event]:font-medium! [&_.fc-event]:transition-opacity! [&_.fc-event:hover]:opacity-85!
+                        [&_.fc-theme-standard_.fc-scrollgrid]:border-[rgba(30,36,48,0.06)]! dark:[&_.fc-theme-standard_.fc-scrollgrid]:border-[rgba(255,255,255,0.06)]!
+                        [&_.fc-theme-standard_td]:border-[rgba(30,36,48,0.06)]! dark:[&_.fc-theme-standard_td]:border-[rgba(255,255,255,0.06)]!
+                        [&_.fc-theme-standard_th]:border-[rgba(30,36,48,0.06)]! dark:[&_.fc-theme-standard_th]:border-[rgba(255,255,255,0.06)]!
+                        [&_.fc-list-day-cushion]:bg-[#F6F7F9]! dark:[&_.fc-list-day-cushion]:bg-[#21293A]!
+                        [&_.fc-list-event:hover_td]:bg-[#4A5FD1]/8! dark:[&_.fc-list-event:hover_td]:bg-[#4A5FD1]/15!
                     ">
                         <FullCalendar
                             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
@@ -77,7 +65,7 @@ export default function KalenderIndex() {
                                 center: 'title',
                                 right: 'dayGridMonth,timeGridWeek,listWeek',
                             }}
-                            events={`/${teamSlug}/kalender/events`}
+                            events={teamSlug ? kalenderEvents.url(teamSlug) : undefined}
                             eventClick={(info) => {
                                 const kegiatanId = info.event.extendedProps.kegiatanId as number;
                                 setSelectedKegiatanId(kegiatanId);
@@ -88,12 +76,12 @@ export default function KalenderIndex() {
 
                                 info.el.addEventListener('mouseenter', () => {
                                     document.querySelectorAll(`[data-group-id="${groupId}"]`).forEach(el => {
-                                        el.classList.add('ring-2', 'ring-offset-1', 'ring-white/50');
+                                        el.classList.add('ring-2', 'ring-offset-1', 'ring-[#4A5FD1]');
                                     });
                                 });
                                 info.el.addEventListener('mouseleave', () => {
                                     document.querySelectorAll(`[data-group-id="${groupId}"]`).forEach(el => {
-                                        el.classList.remove('ring-2', 'ring-offset-1', 'ring-white/50');
+                                        el.classList.remove('ring-2', 'ring-offset-1', 'ring-[#4A5FD1]');
                                     });
                                 });
                                 info.el.dataset.groupId = groupId;
@@ -116,3 +104,22 @@ export default function KalenderIndex() {
         </>
     );
 }
+KalenderIndex.layout = (props: {
+    currentTeam?: { slug: string } | null;
+    auth?: { user?: { role?: string } };
+}) => ({
+    breadcrumbs: [
+        {
+            title: 'Dashboard',
+            href: props.currentTeam
+                ? props.auth?.user?.role === 'pengurus'
+                    ? pengurusDashboard.url(props.currentTeam.slug)
+                    : anggotaDashboard.url(props.currentTeam.slug)
+                : '/',
+        },
+        {
+            title: 'Kalender Kegiatan',
+            href: '#',
+        },
+    ],
+});

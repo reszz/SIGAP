@@ -11,9 +11,9 @@ use App\Services\KegiatanAuthService;
 /**
  * Otorisasi untuk Tugas (SRS §3.7, FR-31/FR-33).
  *
- * manage()       → Pengurus, Ketua Pelaksana, atau anggota Divisi yang SAMA
- *                  dengan jabatan tugas — anggota Div Acara TIDAK bisa manage
- *                  tugas Div Humas, meski keduanya di Kegiatan yang sama.
+ * manage()       → Pengurus, Ketua Pelaksana, atau Koordinator Divisi yang SAMA
+ *                  dengan jabatan tugas. Anggota biasa (non-koordinator) TIDAK bisa
+ *                  manage tugas meski berada di divisi yang sama.
  * updateStatus() → PIC tugas itu sendiri, Pengurus, Ketua Pelaksana.
  */
 class TugasPolicy
@@ -21,12 +21,21 @@ class TugasPolicy
     /**
      * Boleh membuat, mengedit, atau menghapus Tugas (FR-31).
      *
-     * Aturan per SRS §3.7:
+     * Aturan per SRS §3.7 (diperbarui — koordinator):
      * - Pengurus atau Ketua Pelaksana Kegiatan tersebut → selalu boleh
-     * - Anggota Divisi X → hanya boleh manage tugas untuk Divisi X yang sama
+     * - Koordinator Divisi X → hanya boleh manage tugas Divisi X yang sama
+     * - Anggota biasa (non-koordinator) → tidak boleh manage tugas divisi
      */
     public function manage(User $user, Tugas $tugas): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if (KegiatanAuthService::isPengurusAtauKetua($user, $tugas->kegiatan_id)) {
             return true;
         }
@@ -37,7 +46,7 @@ class TugasPolicy
             return false;
         }
 
-        return KegiatanAuthService::punyaJabatan($user, $tugas->kegiatan_id, $jabatanDibutuhkan);
+        return KegiatanAuthService::isKoordinator($user, $tugas->kegiatan_id, $jabatanDibutuhkan);
     }
 
     /**
@@ -46,6 +55,14 @@ class TugasPolicy
      */
     public function updateStatus(User $user, Tugas $tugas): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isPembina()) {
+            return false;
+        }
+
         if ($tugas->pic_user_id === $user->id) {
             return true;
         }

@@ -67,6 +67,18 @@ test('users can authenticate with their NIM', function () {
     expect($response->headers->get('Location'))->toContain($team->slug);
 });
 
+test('pembina is redirected to the pengurus dashboard after login', function () {
+    $user = User::factory()->create(['role' => 'pembina']);
+    $team = $user->personalTeam();
+
+    $response = $this->post(route('login.store'), [
+        'login' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect("/{$team->slug}/pengurus/dashboard");
+});
+
 test('passkey login response redirects to the current team dashboard', function () {
     $user = User::factory()->create();
     $team = $user->personalTeam();

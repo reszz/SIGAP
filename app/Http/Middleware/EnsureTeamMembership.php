@@ -20,6 +20,14 @@ class EnsureTeamMembership
     {
         [$user, $team] = [$request->user(), $this->team($request)];
 
+        if ($user && $user->isSuperAdmin()) {
+            if ($team && (! $user->current_team_id || $user->current_team_id !== $team->id)) {
+                $user->forceFill(['current_team_id' => $team->id])->save();
+            }
+
+            return $next($request);
+        }
+
         abort_if(! $user || ! $team || ! $user->belongsToTeam($team), 403);
 
         $this->ensureTeamMemberHasRequiredRole($user, $team, $minimumRole);

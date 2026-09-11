@@ -22,14 +22,24 @@ class RundownIndexController extends Controller
         $team = Team::where('slug', $currentTeam)->firstOrFail();
         $user = $request->user();
 
-        // Kegiatan yang user punya akses rundown.manage
-        $semuaKegiatan = Kegiatan::where('team_id', $team->id)
+        $periodeId = $user->current_periode_id;
+        $kegiatanQuery = Kegiatan::where('team_id', $team->id);
+        if ($periodeId) {
+            $kegiatanQuery->where(function ($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId)
+                    ->orWhereNull('periode_id');
+            });
+        }
+
+        $semuaKegiatan = $kegiatanQuery
             ->with('sesi:id,kegiatan_id,tanggal,waktu_mulai,waktu_selesai,lokasi')
             ->orderByDesc('created_at')
             ->get(['id', 'nama', 'warna']);
 
         $kegiatanList = $semuaKegiatan->filter(
-            fn ($k) => Gate::forUser($user)->allows('rundown.manage', $k)
+            fn ($k) => $user->isSuperAdmin()
+                || $user->isPembina()
+                || Gate::forUser($user)->allows('rundown.manage', $k)
         )->values();
 
         $selectedKegiatanId = $request->integer('kegiatan_id') ?: $kegiatanList->first()?->id;
@@ -39,6 +49,14 @@ class RundownIndexController extends Controller
 
         $selectedSesiId = $request->integer('sesi_id')
             ?: $selectedKegiatan?->sesi->first()?->id;
+
+        $currentPeriode = $user->currentPeriode;
+        $isPeriodeEditable = ! $currentPeriode || $currentPeriode->is_aktif || $currentPeriode->isLatest();
+        $isReadOnly = $user->isPembina() || (! $isPeriodeEditable && ! $user->isSuperAdmin());
+
+        $canManage = ! $isReadOnly
+            && $selectedKegiatan
+            && Gate::forUser($user)->allows('rundown.manage', $selectedKegiatan);
 
         // Load rundown untuk sesi yang dipilih
         $rundownItems = collect();
@@ -71,6 +89,8 @@ class RundownIndexController extends Controller
             'selectedKegiatanId' => $selectedKegiatanId,
             'selectedSesiId' => $selectedSesiId,
             'rundown' => $rundownItems,
+            'canManage' => $canManage,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 }

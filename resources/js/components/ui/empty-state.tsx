@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
@@ -19,36 +19,28 @@ export function EmptyState({
     return (
         <div
             className={cn(
-                'flex flex-col items-center justify-center gap-4 px-6 py-16 text-center',
+                'flex flex-col items-center justify-center rounded-lg border border-[rgba(30,36,48,0.08)] bg-white px-6 py-12 text-center dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]',
                 className,
             )}
         >
-            {/* Icon illustration — layered circles */}
             {Icon && (
-                <div className="relative">
-                    <div className="size-20 rounded-full bg-[#EEF2FF] dark:bg-[#1E1B4B]" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="size-12 rounded-full bg-[#E0E7FF] dark:bg-[#2E2975] flex items-center justify-center">
-                            <Icon className="size-6 text-[#4F46E5] dark:text-[#818CF8]" />
-                        </div>
-                    </div>
+                <div className="mb-3 flex size-11 items-center justify-center rounded-lg bg-[#F0F2F5] text-[#727C8E] dark:bg-[#21293A] dark:text-[#8C97A8]">
+                    <Icon className="size-5" />
                 </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
-                <h3 className="font-display text-lg font-bold text-neutral-900 dark:text-neutral-100">
+            <div className="flex flex-col gap-1">
+                <h3 className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
                     {title}
                 </h3>
                 {description && (
-                    <p className="max-w-xs text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="max-w-sm text-xs leading-relaxed text-[#727C8E] dark:text-[#8C97A8]">
                         {description}
                     </p>
                 )}
             </div>
 
-            {action && (
-                <div className="mt-2">{action}</div>
-            )}
+            {action && <div className="mt-4">{action}</div>}
         </div>
     );
 }

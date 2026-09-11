@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Evaluasi;
 use App\Models\Presensi;
 use App\Models\Rsvp;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RiwayatSayaController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, string $currentTeam): Response
     {
         $user = $request->user();
-        $team = $user->currentTeam;
+        $team = Team::where('slug', $currentTeam)->firstOrFail();
 
-        abort_if(! $team, 403, 'User tidak terdaftar di Team mana pun.');
+        abort_if(! $user->belongsToTeam($team), 403);
 
         $teamId = $team->id;
 

@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2, Clock, MapPin, CalendarDays, UserCircle, AlertCircle } from 'lucide-react';
+import StatusStiker from '@/components/ui/status-stiker';
 
 type Sesi = {
     id: number;
@@ -49,119 +50,118 @@ export default function PresensiForm({ sesi, kegiatan, user, sudahPresensi }: Pr
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         });
 
-    const statusMap = {
-        terjadwal:   { label: 'Terjadwal',   cls: 'bg-blue-100 text-blue-700' },
-        berlangsung: { label: 'Berlangsung', cls: 'bg-green-100 text-green-700' },
-        selesai:     { label: 'Selesai',     cls: 'bg-neutral-100 text-neutral-500' },
-    };
-
     return (
         <>
             <Head title={`Presensi — ${kegiatan.nama}`} />
 
-            <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4 dark:bg-neutral-950">
+            <div className="flex min-h-screen items-center justify-center bg-[#F6F7F9] p-4 dark:bg-[#0E121A]">
                 <div className="w-full max-w-md">
                     {/* Card */}
-                    <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-neutral-900">
-                        {/* Header berwarna sesuai kegiatan */}
+                    <div className="overflow-hidden rounded-lg border border-[rgba(30,36,48,0.08)] bg-white shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[#181E2B]">
+                        {/* Header dengan warna tema */}
                         <div
-                            className="p-5"
-                            style={{ backgroundColor: kegiatan.warna + '20', borderBottom: `3px solid ${kegiatan.warna}` }}
+                            className="p-5 text-white"
+                            style={{ backgroundColor: kegiatan.warna || '#4A5FD1' }}
                         >
-                            <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                            <div className="flex items-center justify-between">
+                                <span className="font-mono-sigap rounded-md bg-black/20 px-2 py-0.5 text-xs font-semibold text-white uppercase tracking-wider">
+                                    {sesi.kode_presensi}
+                                </span>
+                                <StatusStiker status={sesi.status} />
+                            </div>
+                            <h1 className="font-display mt-3 text-lg font-semibold leading-tight text-white">
                                 {kegiatan.nama}
                             </h1>
-                            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-600 dark:text-neutral-400">
-                                <span className="flex items-center gap-1.5">
-                                    <CalendarDays className="size-4" />
+                            <div className="mt-2.5 flex flex-wrap items-center gap-3 font-mono-sigap text-xs text-white/90">
+                                <span className="flex items-center gap-1.5 font-sans">
+                                    <CalendarDays className="size-3.5" />
                                     {formatTanggal(sesi.tanggal)}
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <Clock className="size-4" />
-                                    {sesi.waktu_mulai.slice(0, 5)} – {sesi.waktu_selesai.slice(0, 5)}
+                                    <Clock className="size-3.5" />
+                                    {sesi.waktu_mulai.slice(0, 5)} – {sesi.waktu_selesai.slice(0, 5)} WIB
                                 </span>
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin className="size-4" />
+                                <span className="flex items-center gap-1.5 font-sans">
+                                    <MapPin className="size-3.5" />
                                     {sesi.lokasi}
                                 </span>
                             </div>
-                            <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusMap[sesi.status].cls}`}>
-                                {statusMap[sesi.status].label}
-                            </span>
                         </div>
 
                         <div className="p-5">
                             {/* Sudah presensi */}
                             {(sudahPresensi || wasSuccessful) ? (
                                 <div className="flex flex-col items-center gap-3 py-6 text-center">
-                                    <div className="flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                                        <CheckCircle2 className="size-8 text-green-600 dark:text-green-400" />
+                                    <div className="flex size-14 items-center justify-center rounded-full bg-[#2E9E82]/12 text-[#2E9E82] dark:bg-[#2E9E82]/20">
+                                        <CheckCircle2 className="size-7" />
                                     </div>
                                     <div>
-                                        <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                                            Presensi Tercatat!
+                                        <p className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                            Presensi Berhasil Dicatat
                                         </p>
-                                        <p className="mt-1 text-sm text-neutral-500">
-                                            Kehadiranmu sudah berhasil dicatat untuk sesi ini.
+                                        <p className="mt-1 text-xs text-[#727C8E] dark:text-[#8C97A8]">
+                                            Kehadiran Anda telah terkonfirmasi ke dalam sistem kegiatan.
                                         </p>
                                     </div>
                                 </div>
                             ) : sesi.status !== 'berlangsung' ? (
                                 /* Sesi tidak berlangsung */
                                 <div className="flex flex-col items-center gap-3 py-6 text-center">
-                                    <div className="flex size-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-                                        <AlertCircle className="size-8 text-amber-500" />
+                                    <div className="flex size-14 items-center justify-center rounded-full bg-[#B8862E]/12 text-[#B8862E] dark:bg-[#B8862E]/20">
+                                        <AlertCircle className="size-7" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                                            Presensi belum dibuka
+                                        <p className="font-display text-base font-semibold text-[#1E2430] dark:text-[#E6ECF5]">
+                                            Presensi Belum Dibuka
                                         </p>
-                                        <p className="mt-1 text-sm text-neutral-500">
+                                        <p className="mt-1 text-xs text-[#727C8E] dark:text-[#8C97A8]">
                                             {sesi.status === 'terjadwal'
-                                                ? 'Sesi ini belum dimulai. Presensi hanya bisa diisi saat sesi sedang berlangsung.'
-                                                : 'Sesi ini sudah selesai. Waktu presensi sudah berakhir.'}
+                                                ? 'Sesi ini belum dimulai. Presensi hanya dapat diisi saat sesi sedang berlangsung.'
+                                                : 'Sesi ini telah selesai. Batas waktu presensi telah berakhir.'}
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 /* Form presensi */
-                                <form onSubmit={submit} className="flex flex-col gap-5">
+                                <form onSubmit={submit} className="flex flex-col gap-4">
                                     {/* Identitas (read-only) */}
-                                    <div className="rounded-xl bg-neutral-50 p-4 dark:bg-neutral-800">
-                                        <p className="mb-2 text-xs font-medium text-neutral-500">Identitas Kamu</p>
+                                    <div className="rounded-md border border-[rgba(30,36,48,0.08)] bg-[#F6F7F9]/50 p-3.5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#21293A]/40">
+                                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#727C8E] dark:text-[#8C97A8]">
+                                            Identitas Pengguna
+                                        </p>
                                         <div className="flex items-center gap-3">
-                                            <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-                                                <UserCircle className="size-6 text-indigo-600 dark:text-indigo-400" />
+                                            <div className="flex size-9 items-center justify-center rounded-full bg-[#4A5FD1]/12 text-[#4A5FD1] dark:bg-[#4A5FD1]/20 dark:text-[#8FA0FA]">
+                                                <UserCircle className="size-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{user.name}</p>
-                                                <p className="text-xs text-neutral-500">NIM: {user.nim}</p>
-                                                <p className="text-xs text-neutral-500">{user.email}</p>
+                                                <p className="text-xs font-semibold text-[#1E2430] dark:text-[#E6ECF5]">{user.name}</p>
+                                                <p className="font-mono-sigap text-[11px] text-[#727C8E] dark:text-[#8C97A8]">NIM: {user.nim}</p>
+                                                <p className="text-[11px] text-[#727C8E] dark:text-[#8C97A8]">{user.email}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Catatan opsional */}
                                     <div>
-                                        <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                            Catatan <span className="font-normal text-neutral-400">(opsional)</span>
+                                        <label className="mb-1.5 block text-xs font-medium text-[#1E2430] dark:text-[#E6ECF5]">
+                                            Catatan Kehadiran <span className="font-normal text-[#727C8E] dark:text-[#8C97A8]">(opsional)</span>
                                         </label>
                                         <textarea
                                             value={data.catatan}
                                             onChange={e => setData('catatan', e.target.value)}
                                             rows={3}
-                                            placeholder="Tulis catatan jika ada (misal: izin terlambat karena...)"
-                                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                                            placeholder="Tuliskan catatan jika ada (contoh: izin datang terlambat karena kuliah)..."
+                                            className="w-full rounded-md border border-[rgba(30,36,48,0.12)] bg-white px-3 py-2 text-xs text-[#1E2430] outline-none focus:border-[#4A5FD1] focus:ring-2 focus:ring-[#4A5FD1]/20 dark:border-[rgba(255,255,255,0.12)] dark:bg-[#181E2B] dark:text-[#E6ECF5]"
                                         />
-                                        {errors.catatan && <p className="mt-1 text-xs text-red-500">{errors.catatan}</p>}
-                                        {errors.rsvp && (
-                                            <div className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                                                {errors.rsvp}
+                                        {errors.catatan && <p className="mt-1 text-xs text-[#C4514A]">{errors.catatan}</p>}
+                                        {(errors as Record<string, string | undefined>).rsvp && (
+                                            <div className="mt-2 rounded-md bg-[#C4514A]/10 p-2.5 text-xs text-[#C4514A] dark:bg-[#C4514A]/20 dark:text-[#D9615A]">
+                                                {(errors as Record<string, string | undefined>).rsvp}
                                             </div>
                                         )}
-                                        {errors.presensi && (
-                                            <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                                                {errors.presensi}
+                                        {(errors as Record<string, string | undefined>).presensi && (
+                                            <div className="mt-2 rounded-md bg-[#B8862E]/10 p-2.5 text-xs text-[#B8862E] dark:bg-[#B8862E]/20 dark:text-[#D4A142]">
+                                                {(errors as Record<string, string | undefined>).presensi}
                                             </div>
                                         )}
                                     </div>
@@ -169,10 +169,10 @@ export default function PresensiForm({ sesi, kegiatan, user, sudahPresensi }: Pr
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#4A5FD1] py-2.5 text-xs font-semibold text-white transition hover:bg-[#3B4DB8] disabled:opacity-50"
                                     >
                                         <CheckCircle2 className="size-4" />
-                                        {processing ? 'Menyimpan...' : 'Konfirmasi Kehadiran'}
+                                        <span>{processing ? 'Menyimpan...' : 'Konfirmasi Kehadiran'}</span>
                                     </button>
                                 </form>
                             )}
