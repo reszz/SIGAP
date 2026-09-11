@@ -12,6 +12,8 @@
 /resources/js/wayfinder
 /vendor
 .DS_Store
+*.bak
+*.broken
 .env
 .env.backup
 .env.production
